@@ -181,23 +181,15 @@ export function PlanForm() {
       if (result.success) {
         toast({
           title: "تم الإرسال بنجاح!",
-          description: "سيتم إعادة تحميل النموذج الآن...",
+          description: "سيتم إغلاق الواجهة الآن...",
           variant: "default",
           className: "bg-green-600 text-white",
         });
         setTimeout(() => {
-            form.reset({
-              governorate: "",
-              month: "",
-              events: [],
-              deputies: [{ name: "" }],
-              president: "",
-            });
-            setGovDisplay("...............");
-            setShowEventForm(false);
-            setShowSignatures(false);
-            setEditingEventIndex(null);
-        }, 2500);
+          if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.close();
+          }
+        }, 1500);
 
       } else {
         toast({
