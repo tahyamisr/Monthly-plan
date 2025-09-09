@@ -206,11 +206,12 @@ export function PlanForm() {
         </div>
         
         <div className="text-gray-700 leading-relaxed mb-8 text-center space-y-4">
-            <p>نود نحن لجنة التنظيم محافظة <span id="govDisplay" className={cn(govDisplay === 'الشرقية' && "text-black font-bold")}>{govDisplay}</span> إعلام سيادتكم رئيس لجنة التنظيم المركزية القائد/ 
-                <strong className="text-gray-900"> اسلام فارس</strong>
-                ونائبيه القائد/ <strong className="text-gray-900"> ريم منصور</strong>
-                والقائد/ <strong className="text-gray-900"> احمد حسن</strong>
-                بما سوف تقوم به اللجنة خلال الفترة القادمة.
+            <p>
+                نود نحن، لجنة التنظيم بمحافظة <span id="govDisplay" className={cn(govDisplay === 'الشرقية' && "text-black font-bold")}>{govDisplay}</span>،
+                أن نُعلم سيادتكم، القائد/ <strong className="text-gray-900">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)،
+                والقائد/ <strong className="text-gray-900">ريم منصور</strong> (نائب رئيس اللجنة)،
+                والقائد/ <strong className="text-gray-900">أحمد حسن</strong> (نائب رئيس اللجنة)،
+                بخطة عمل اللجنة خلال الفترة القادمة.
             </p>
         </div>
 
