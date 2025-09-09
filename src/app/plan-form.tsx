@@ -79,6 +79,8 @@ export function PlanForm() {
       president: "",
     },
   });
+  
+  const selectedMonth = form.watch("month");
 
   const { fields: eventFields, append: appendEvent, remove: removeEvent } = useFieldArray({
     control: form.control,
@@ -223,7 +225,7 @@ export function PlanForm() {
         </div>
         
         <div className="text-foreground text-sm leading-relaxed mb-6 text-center space-y-2 bg-muted/50 p-3 rounded-md">
-            <p><span className="font-bold">تحية طيبة وبعد،</span></p>
+            <p><span className="font-bold">خطة شهر {selectedMonth || "..."}</span></p>
             <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{govDisplay}</span>.</p>
             <p className="font-semibold">إلى السادة:</p>
             <ul className="list-none p-0 m-0 text-xs text-muted-foreground">
@@ -377,3 +379,5 @@ export function PlanForm() {
     </Form>
   );
 }
+
+    
