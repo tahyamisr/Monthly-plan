@@ -7,12 +7,13 @@ export default function Home() {
       <div className="flex-grow max-w-5xl w-full mx-auto bg-card p-8 my-10 rounded-lg shadow-md border border-border">
         <header className="flex flex-col sm:flex-row justify-center items-center mb-8 pb-4 border-b">
           <Image
-            src="https://www.dropbox.com/scl/fi/fnot6lk4eky6a51iygybg/.png?rlkey=la54x8gme7xmk8zwo4vvfqrjw&raw=1"
+            src="/images/logo.png"
             alt="شعار اتحاد طلاب تحيا مصر - اللجنة المركزية"
             width={100}
             height={100}
             className="object-contain w-24 h-24 sm:w-36 sm:h-36"
             data-ai-hint="logo organization"
+            unoptimized={true}
           />
           <div className="text-center mx-4">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">اتحاد طلاب تحيا مصر</h1>
