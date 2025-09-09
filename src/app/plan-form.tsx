@@ -17,14 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -33,7 +25,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
-import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
   governorate: z.string().min(1, "الرجاء اختيار المحافظة."),
@@ -95,7 +88,6 @@ export function PlanForm() {
   };
   
   React.useEffect(() => {
-    // Add two initial rows
     if (eventFields.length === 0) {
         appendEvent({ details: "", date: "", type: "اونلاين" });
         appendEvent({ details: "", date: "", type: "اونلاين" });
@@ -104,7 +96,6 @@ export function PlanForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
-      // Massage data to match webhook expectations
       const submissionData = {
         governorate: values.governorate,
         month: values.month,
@@ -113,7 +104,7 @@ export function PlanForm() {
         events: values.events.map(e => ({ name: e.details, date: e.date, type: e.type }))
       };
       
-      const result = await submitPlan(submissionData as any); // Cast because server action has different schema now
+      const result = await submitPlan(submissionData as any);
       if (result.success) {
         toast({
           title: "تم الإرسال بنجاح!",
@@ -147,20 +138,20 @@ export function PlanForm() {
       } else {
         form.setValue(`events.${rowIndex}.date`, "");
       }
-    }, [day, month, year, rowIndex]);
+    }, [day, month, year, rowIndex, form]);
 
     return (
-      <div className="flex gap-1 justify-center">
+      <div className="flex gap-2 justify-center">
         <Select onValueChange={setDay} value={day}>
-          <SelectTrigger className="w-1/3 h-9"><SelectValue placeholder="اليوم" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="اليوم" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 31 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
         <Select onValueChange={setMonth} value={month}>
-          <SelectTrigger className="w-1/3 h-9"><SelectValue placeholder="الشهر" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="الشهر" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 12 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
          <Select onValueChange={setYear} value={year}>
-          <SelectTrigger className="w-1/3 h-9"><SelectValue placeholder="السنة" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="السنة" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 6 }, (_, i) => <SelectItem key={i} value={`${new Date().getFullYear() + i}`}>{new Date().getFullYear() + i}</SelectItem>)}</SelectContent>
         </Select>
       </div>
@@ -223,54 +214,80 @@ export function PlanForm() {
             </p>
         </div>
 
-        <div className="overflow-x-auto">
-              <Table className="min-w-full bg-white border border-gray-300 text-center">
-                <TableHeader className="bg-gray-800 text-white">
-                  <TableRow>
-                    <TableHead className="py-3 px-2 border-b text-white">م</TableHead>
-                    <TableHead className="py-3 px-4 border-b text-white">الحدث</TableHead>
-                    <TableHead className="py-3 px-4 border-b text-white">التاريخ</TableHead>
-                    <TableHead className="py-3 px-4 border-b text-white">نوع الحدث</TableHead>
-                    <TableHead className="py-3 px-2 border-b text-white">إجراء</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {eventFields.map((field, index) => (
-                    <TableRow key={field.id} className="hover:bg-gray-50">
-                      <TableCell className="py-2 px-2 border-b font-bold">{index + 1}</TableCell>
-                      <TableCell className="py-2 px-4 border-b">
-                        <FormField control={form.control} name={`events.${index}.details`} render={({ field }) => <Input placeholder="تفاصيل الحدث" {...field} className="h-9"/>} />
-                      </TableCell>
-                       <TableCell className="py-2 px-4 border-b">
-                         <DateSelector rowIndex={index} />
-                         <FormField control={form.control} name={`events.${index}.date`} render={({ field }) => <Input type="hidden" {...field} />} />
-                      </TableCell>
-                       <TableCell className="py-2 px-4 border-b">
-                         <FormField
-                            control={form.control}
-                            name={`events.${index}.type`}
-                            render={({ field }) => (
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger className="h-9"><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                                </Select>
-                            )}
-                         />
-                      </TableCell>
-                      <TableCell className="py-2 px-2 border-b">
-                        <Button type="button" variant="ghost" size="icon" className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full h-auto w-auto" onClick={() => removeEvent(index)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <FormMessage>{form.formState.errors.events?.root?.message}</FormMessage>
+        <div className="space-y-6">
+            {eventFields.map((field, index) => (
+              <Card key={field.id} className="bg-gray-50 border-gray-200">
+                <CardHeader className="flex flex-row items-center justify-between pb-4">
+                  <CardTitle className="text-xl text-gray-800">الفعالية #{index + 1}</CardTitle>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="bg-red-500 hover:bg-red-600 text-white rounded-full h-8 w-8"
+                    onClick={() => removeEvent(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name={`events.${index}.details`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ما هو الحدث؟</FormLabel>
+                        <FormControl>
+                          <Input placeholder="تفاصيل الحدث" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`events.${index}.date`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>متى سيقام الحدث؟</FormLabel>
+                        <FormControl>
+                          <>
+                            <DateSelector rowIndex={index} />
+                            <Input type="hidden" {...field} />
+                          </>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`events.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ما هو نوع الحدث؟</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="اختر النوع" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+             <FormMessage>{form.formState.errors.events?.root?.message}</FormMessage>
         </div>
+
         <div className="mt-4 text-left">
             <Button type="button" onClick={handleAddEventRow} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition">
-              + إضافة حدث
+              + إضافة فعالية
             </Button>
         </div>
 
