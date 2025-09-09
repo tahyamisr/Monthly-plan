@@ -231,7 +231,7 @@ export function PlanForm() {
         {/* Events Section */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-xl text-foreground">الفعاليات</CardTitle>
+            <CardTitle className="text-xl text-foreground">الأحداث</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {eventFields.map((field, index) => (
