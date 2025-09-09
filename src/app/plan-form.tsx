@@ -331,7 +331,7 @@ export function PlanForm() {
             )}
              <div className="mt-4 text-center">
                 <Button type="button" onClick={handleAddNewEventClick} variant="secondary" disabled={showEventForm}>
-                  + إضافة فعالية
+                  اضافة حدث +
                 </Button>
             </div>
         </div>
