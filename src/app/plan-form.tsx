@@ -33,6 +33,15 @@ declare global {
   }
 }
 
+const arabicQuadName = z.string()
+  .min(1, "الاسم مطلوب.")
+  .refine(value => /^[\u0621-\u064A\s]+$/.test(value), {
+    message: "الرجاء إدخال الاسم باللغة العربية فقط.",
+  })
+  .refine(value => value.trim().split(/\s+/).length === 4, {
+    message: "الرجاء إدخال الاسم الرباعي.",
+  });
+
 const formSchema = z.object({
   governorate: z.string().min(1, "الرجاء اختيار المحافظة."),
   month: z.string().min(1, "الرجاء اختيار الشهر."),
@@ -45,8 +54,8 @@ const formSchema = z.object({
       })
     )
     .min(1, "يجب إضافة فعالية واحدة على الأقل."),
-  deputies: z.array(z.object({ name: z.string().min(2, "اسم النائب مطلوب.") })).min(1, "يجب إضافة نائب واحد على الأقل."),
-  president: z.string().min(2, "اسم الرئيس مطلوب."),
+  deputies: z.array(z.object({ name: arabicQuadName })).min(1, "يجب إضافة نائب واحد على الأقل."),
+  president: arabicQuadName,
 });
 
 const months = [
