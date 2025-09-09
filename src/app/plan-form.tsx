@@ -3,10 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useTransition } from "react";
+import React, { useTransition } from "react";
 import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
-
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -80,9 +79,20 @@ const months = [
 
 const eventTypes = ["ثقافي", "اجتماعي", "رياضي", "أكاديمي", "فني", "تطوعي", "أخرى"];
 
+type EventFormData = {
+    details: string;
+    date: Date;
+    type: string;
+};
+
 export function PlanForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const [eventFormData, setEventFormData] = React.useState<EventFormData>({
+    details: "",
+    date: new Date(),
+    type: "",
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -102,6 +112,20 @@ export function PlanForm() {
     control: form.control,
     name: "deputies",
   });
+  
+  const handleAddEvent = () => {
+    if (eventFormData.details.length < 5 || !eventFormData.date || !eventFormData.type) {
+      toast({
+        title: "خطأ!",
+        description: "يرجى تعبئة جميع حقول الفعالية.",
+        variant: "destructive",
+      });
+      return;
+    }
+    appendEvent(eventFormData);
+    setEventFormData({ details: "", date: new Date(), type: "" });
+  };
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
@@ -173,9 +197,89 @@ export function PlanForm() {
 
         <Card>
           <CardHeader>
-            <CardTitle>الفعاليات والأنشطة</CardTitle>
+            <CardTitle>إضافة فعالية جديدة</CardTitle>
             <CardDescription>
-              أضف الفعاليات المخطط لها خلال الشهر.
+              أدخل تفاصيل الفعالية واضغط على زر الإضافة.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <FormLabel>تفاصيل الفعالية</FormLabel>
+                <Textarea 
+                    placeholder="وصف موجز للفعالية..." 
+                    value={eventFormData.details}
+                    onChange={(e) => setEventFormData({...eventFormData, details: e.target.value})}
+                    className="min-h-[60px]"
+                />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <FormLabel>التاريخ</FormLabel>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-right font-normal",
+                                !eventFormData.date && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="ml-2 h-4 w-4" />
+                              {eventFormData.date ? (
+                                format(eventFormData.date, "PPP", { locale: ar })
+                              ) : (
+                                <span>اختر تاريخ</span>
+                              )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={eventFormData.date}
+                            onSelect={(date) => date && setEventFormData({...eventFormData, date})}
+                            disabled={(date) => date < new Date("1900-01-01")}
+                            initialFocus
+                            locale={ar}
+                            dir="rtl"
+                          />
+                        </PopoverContent>
+                    </Popover>
+                 </div>
+                 <div className="space-y-2">
+                    <FormLabel>نوع الفعالية</FormLabel>
+                     <Select 
+                        value={eventFormData.type}
+                        onValueChange={(value) => setEventFormData({...eventFormData, type: value})}
+                     >
+                        <SelectTrigger>
+                            <SelectValue placeholder="اختر النوع" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {eventTypes.map((type) => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                 </div>
+            </div>
+             <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={handleAddEvent}
+            >
+              <PlusCircle className="ml-2 h-4 w-4" />
+              إضافة الفعالية للجدول
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>الفعاليات والأنشطة المضافة</CardTitle>
+            <CardDescription>
+              قائمة بالفعاليات التي تمت إضافتها للخطة.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -183,7 +287,7 @@ export function PlanForm() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">تفاصيل الفعالية</TableHead>
+                    <TableHead className="w-[50%]">تفاصيل الفعالية</TableHead>
                     <TableHead>التاريخ</TableHead>
                     <TableHead>نوع الفعالية</TableHead>
                     <TableHead className="text-left">إجراء</TableHead>
@@ -192,85 +296,11 @@ export function PlanForm() {
                 <TableBody>
                   {eventFields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`events.${index}.details`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Textarea placeholder="وصف موجز للفعالية..." {...field} className="min-h-[60px]" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <TableCell className="font-medium">{field.details}</TableCell>
+                       <TableCell>
+                        {format(field.date, "PPP", { locale: ar })}
                       </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`events.${index}.date`}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant={"outline"}
-                                      className={cn(
-                                        "w-[240px] pl-3 text-right font-normal",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        format(field.value, "PPP", { locale: ar })
-                                      ) : (
-                                        <span>اختر تاريخ</span>
-                                      )}
-                                      <CalendarIcon className="mr-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) => date < new Date("1900-01-01")}
-                                    initialFocus
-                                    locale={ar}
-                                    dir="rtl"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`events.${index}.type`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="اختر النوع" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {eventTypes.map((type) => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
+                       <TableCell>{field.type}</TableCell>
                       <TableCell className="text-left">
                         <Button
                           type="button"
@@ -292,17 +322,16 @@ export function PlanForm() {
                   )}
                 </TableBody>
               </Table>
+               <FormField
+                  control={form.control}
+                  name="events"
+                  render={() => (
+                     <FormItem>
+                       <FormMessage className="mt-2" />
+                     </FormItem>
+                  )}
+                />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={() => appendEvent({ details: "", date: new Date(), type: "" })}
-            >
-              <PlusCircle className="ml-2 h-4 w-4" />
-              إضافة فعالية جديدة
-            </Button>
           </CardContent>
         </Card>
 
