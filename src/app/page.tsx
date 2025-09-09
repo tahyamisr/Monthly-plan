@@ -3,8 +3,8 @@ import { PlanForm } from './plan-form';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-8">
-      <div className="max-w-5xl mx-auto bg-card p-8 my-10 rounded-lg shadow-md border border-border">
+    <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-8 flex flex-col">
+      <div className="flex-grow max-w-5xl w-full mx-auto bg-card p-8 my-10 rounded-lg shadow-md border border-border">
         <header className="flex flex-col sm:flex-row justify-center items-center mb-8 pb-4 border-b">
           <Image
             src="https://www.dropbox.com/scl/fi/fnot6lk4eky6a51iygybg/.png?rlkey=la54x8gme7xmk8zwo4vvfqrjw&raw=1"
@@ -22,6 +22,9 @@ export default function Home() {
 
         <PlanForm />
       </div>
+      <footer className="text-center p-4 text-muted-foreground text-sm">
+        اعداد وتنفيذ لجنة التنظيم المركزية
+      </footer>
     </main>
   );
 }
