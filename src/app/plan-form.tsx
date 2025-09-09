@@ -237,11 +237,8 @@ export function PlanForm() {
         </div>
 
         {/* Events Section */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-xl text-foreground">الأحداث</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="space-y-4">
+            <h3 className="text-xl text-foreground font-bold text-center">الأحداث</h3>
             {eventFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
                 <div className="mb-2">
@@ -294,13 +291,12 @@ export function PlanForm() {
                     <Button type="button" onClick={handleAddEventRow}>حفظ الفعالية</Button>
                 </div>
             )}
-             <div className="mt-4 text-left">
+             <div className="mt-4 text-center">
                 <Button type="button" onClick={() => setShowEventForm(true)} variant="secondary" disabled={showEventForm}>
                   + إضافة فعالية
                 </Button>
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
 
         {/* Signatures Section */}
