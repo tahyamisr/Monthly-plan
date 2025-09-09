@@ -222,10 +222,16 @@ export function PlanForm() {
             />
         </div>
         
-        <div className="text-foreground leading-relaxed mb-8 text-center space-y-4">
-            <p>
-            نود نحن، لجنة التنظيم بمحافظة <span id="govDisplay" className="font-bold text-primary">{govDisplay}</span>، أن نُعلم سيادتكم، القائد/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)، ونائبيه، القائد/ <strong className="text-foreground">ريم منصور</strong>، والقائد/ <strong className="text-foreground">أحمد حسن</strong>، بخطة عمل اللجنة خلال الفترة القادمة.
-            </p>
+        <div className="text-foreground leading-relaxed mb-8 text-center space-y-4 bg-muted/50 p-4 rounded-md">
+            <p className="font-bold">تحية طيبة وبعد،</p>
+            <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{govDisplay}</span>.</p>
+            <p>إلى السادة:</p>
+            <ul className="list-disc list-inside inline-block text-right">
+                <li>القائد/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)</li>
+                <li>القائد/ <strong className="text-foreground">ريم منصور</strong> (نائب رئيس اللجنة)</li>
+                <li>القائد/ <strong className="text-foreground">أحمد حسن</strong> (نائب رئيس اللجنة)</li>
+            </ul>
+            <p>نعرض على سيادتكم خطة عمل اللجنة المقترحة.</p>
         </div>
 
         {/* Events Section */}
