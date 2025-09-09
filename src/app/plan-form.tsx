@@ -25,8 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
-import { Loader2, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Trash2, Pencil } from "lucide-react";
 
 const formSchema = z.object({
   governorate: z.string().min(1, "الرجاء اختيار المحافظة."),
@@ -63,8 +62,10 @@ export function PlanForm() {
   const [govDisplay, setGovDisplay] = React.useState("...............");
   const [showEventForm, setShowEventForm] = React.useState(false);
   const [showSignatures, setShowSignatures] = React.useState(false);
+  
+  const [editingEventIndex, setEditingEventIndex] = React.useState<number | null>(null);
 
-  // State for the new event being created
+  // State for the new/editing event being created
   const [newEvent, setNewEvent] = React.useState({ details: "", date: "", type: "" });
   const [newDate, setNewDate] = React.useState({ day: "", month: "", year: "" });
 
@@ -82,7 +83,7 @@ export function PlanForm() {
   
   const selectedMonth = form.watch("month");
 
-  const { fields: eventFields, append: appendEvent, remove: removeEvent } = useFieldArray({
+  const { fields: eventFields, append: appendEvent, remove: removeEvent, update: updateEvent } = useFieldArray({
     control: form.control,
     name: "events",
   });
@@ -92,12 +93,11 @@ export function PlanForm() {
     name: "deputies",
   });
 
-  const handleAddEventRow = () => {
+  const handleSaveEvent = () => {
     const fullDate = newDate.day && newDate.month && newDate.year ? `${newDate.day}/${newDate.month}/${newDate.year}` : "";
-    const eventToadd = { ...newEvent, date: fullDate };
+    const eventToSave = { ...newEvent, date: fullDate };
 
-    // Simple validation before adding
-    if (!eventToadd.details || !eventToadd.date || !eventToadd.type) {
+    if (!eventToSave.details || !eventToSave.date || !eventToSave.type) {
         toast({
             title: "بيانات غير مكتملة",
             description: "الرجاء ملء جميع حقول الفعالية قبل الحفظ.",
@@ -106,13 +106,40 @@ export function PlanForm() {
         return;
     }
 
-    appendEvent(eventToadd);
-    // Reset for next event
+    if (editingEventIndex !== null) {
+      updateEvent(editingEventIndex, eventToSave);
+    } else {
+      appendEvent(eventToSave);
+    }
+
+    // Reset form and state
     setNewEvent({ details: "", date: "", type: "" });
     setNewDate({ day: "", month: "", year: "" });
     setShowEventForm(false);
+    setEditingEventIndex(null);
   };
   
+  const handleAddNewEventClick = () => {
+    setEditingEventIndex(null);
+    setNewEvent({ details: "", date: "", type: "" });
+    setNewDate({ day: "", month: "", year: "" });
+    setShowEventForm(true);
+  };
+
+  const handleEditEventClick = (index: number) => {
+    const eventToEdit = eventFields[index];
+    const [day, month, year] = eventToEdit.date.split('/');
+
+    setEditingEventIndex(index);
+    setNewEvent({
+      details: eventToEdit.details,
+      date: eventToEdit.date,
+      type: eventToEdit.type,
+    });
+    setNewDate({ day, month, year });
+    setShowEventForm(true);
+  };
+
   const handleShowSignatures = () => {
       setShowSignatures(true);
   }
@@ -146,6 +173,7 @@ export function PlanForm() {
             setGovDisplay("...............");
             setShowEventForm(false);
             setShowSignatures(false);
+            setEditingEventIndex(null);
         }, 2500);
 
       } else {
@@ -240,28 +268,39 @@ export function PlanForm() {
             <h3 className="text-xl text-foreground font-bold text-center">الأحداث</h3>
             {eventFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
-                <div className="mb-2">
+                 <div className="mb-2">
                     <p className="font-bold">الفعالية #{index + 1}:</p>
                     <p>{field.details}</p>
                 </div>
                 <p><strong>التاريخ:</strong> {field.date}</p>
                 <p><strong>النوع:</strong> {field.type}</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 left-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full h-8 w-8"
-                  onClick={() => removeEvent(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                 <div className="absolute top-2 left-2 flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-8 w-8"
+                      onClick={() => handleEditEventClick(index)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full h-8 w-8"
+                      onClick={() => removeEvent(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
               </div>
             ))}
              <FormMessage>{form.formState.errors.events?.root?.message || form.formState.errors.events?.message}</FormMessage>
 
             {showEventForm && (
                 <div className="p-4 border rounded-md mt-4 space-y-4">
-                    <h4 className="font-bold text-lg">إضافة فعالية جديدة</h4>
+                    <h4 className="font-bold text-lg">{editingEventIndex !== null ? 'تعديل الفعالية' : 'إضافة فعالية جديدة'}</h4>
                     <FormItem>
                       <FormLabel>ما هو الحدث؟</FormLabel>
                       <FormControl>
@@ -287,11 +326,11 @@ export function PlanForm() {
                         <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                       </Select>
                     </FormItem>
-                    <Button type="button" onClick={handleAddEventRow}>حفظ الفعالية</Button>
+                    <Button type="button" onClick={handleSaveEvent}>حفظ الفعالية</Button>
                 </div>
             )}
              <div className="mt-4 text-center">
-                <Button type="button" onClick={() => setShowEventForm(true)} variant="secondary" disabled={showEventForm}>
+                <Button type="button" onClick={handleAddNewEventClick} variant="secondary" disabled={showEventForm}>
                   + إضافة فعالية
                 </Button>
             </div>
@@ -359,7 +398,7 @@ export function PlanForm() {
 
 
         <div className="mt-12 text-center">
-          <Button type="submit" size="lg" disabled={isPending || !showSignatures} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition shadow-lg w-48">
+          <Button type="submit" size="lg" disabled={isPending || !showSignatures || eventFields.length === 0} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition shadow-lg w-48">
             {isPending ? (
               <>
                 <Loader2 className="ml-2 h-5 w-5 animate-spin" />
