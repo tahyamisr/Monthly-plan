@@ -225,7 +225,7 @@ export function PlanForm() {
         </div>
         
         <div className="text-foreground text-sm leading-relaxed mb-6 text-center space-y-2 bg-muted/50 p-3 rounded-md">
-            <p>خطة شهر <span className="font-bold text-primary">{selectedMonth || "..."}</span></p>
+            <p>خطة شهر <span className="font-bold text-primary">{selectedMonth || "................"}</span></p>
             <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{govDisplay}</span>.</p>
             <p className="font-semibold">إلى السادة:</p>
             <ul className="list-none p-0 m-0 text-xs text-muted-foreground">
