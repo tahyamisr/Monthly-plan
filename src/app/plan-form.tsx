@@ -373,7 +373,7 @@ export function PlanForm() {
                         ))}
                     </div>
                      <FormMessage>{form.formState.errors.deputies?.root?.message || form.formState.errors.deputies?.message}</FormMessage>
-                    <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2 text-sm text-primary hover:text-primary/90" variant="link">
+                    <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2" variant="outline" size="sm">
                         + إضافة نائب آخر
                     </Button>
                 </div>
