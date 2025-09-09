@@ -233,7 +233,6 @@ export function PlanForm() {
                 <li>القائد/ <strong className="text-foreground">ريم منصور</strong> (نائب رئيس اللجنة)</li>
                 <li>القائد/ <strong className="text-foreground">أحمد حسن</strong> (نائب رئيس اللجنة)</li>
             </ul>
-            <p className="text-xs pt-2">نعرض على سيادتكم خطة عمل اللجنة المقترحة.</p>
         </div>
 
         {/* Events Section */}
