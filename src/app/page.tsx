@@ -7,7 +7,7 @@ export default function Home() {
       <div className="max-w-5xl mx-auto bg-card p-8 my-10 rounded-lg shadow-md border border-border">
         <header className="flex flex-col sm:flex-row justify-center items-center mb-8 pb-4 border-b">
           <Image
-            src="https://www.dropbox.com/scl/fi/cdpfbk7nlzbn5mb13nmbt/.jpg?rlkey=5gaov2yymvxp4isbw9crxiuza&raw=1"
+            src="https://www.dropbox.com/scl/fi/fnot6lk4eky6a51iygybg/.png?rlkey=la54x8gme7xmk8zwo4vvfqrjw&raw=1"
             alt="شعار اتحاد طلاب تحيا مصر - اللجنة المركزية"
             width={100}
             height={100}
