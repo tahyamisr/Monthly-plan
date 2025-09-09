@@ -40,7 +40,7 @@ const formSchema = z.object({
       })
     )
     .min(1, "يجب إضافة فعالية واحدة على الأقل."),
-  deputies: z.array(z.object({ name: z.string().min(2, "اسم النائب مطلوب.") })),
+  deputies: z.array(z.object({ name: z.string().min(2, "اسم النائب مطلوب.") })).min(1, "يجب إضافة نائب واحد على الأقل."),
   president: z.string().min(2, "اسم الرئيس مطلوب."),
 });
 
@@ -61,6 +61,9 @@ export function PlanForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [govDisplay, setGovDisplay] = React.useState("...............");
+  const [showEventForm, setShowEventForm] = React.useState(false);
+  const [showSignatures, setShowSignatures] = React.useState(false);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,7 +71,7 @@ export function PlanForm() {
       governorate: "",
       month: "",
       events: [],
-      deputies: [{ name: "" }],
+      deputies: [],
       president: "",
     },
   });
@@ -85,7 +88,15 @@ export function PlanForm() {
 
   const handleAddEventRow = () => {
     appendEvent({ details: "", date: "", type: "" });
+    setShowEventForm(false);
   };
+  
+  const handleShowSignatures = () => {
+      setShowSignatures(true);
+      if (deputyFields.length === 0) {
+        appendDeputy({ name: "" });
+      }
+  }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
@@ -110,10 +121,12 @@ export function PlanForm() {
               governorate: "",
               month: "",
               events: [],
-              deputies: [{ name: "" }],
+              deputies: [],
               president: "",
             });
             setGovDisplay("...............");
+            setShowEventForm(false);
+            setShowSignatures(false);
         }, 2500);
 
       } else {
@@ -125,19 +138,19 @@ export function PlanForm() {
       }
     });
   }
-
-  const DateSelector = ({ rowIndex }: { rowIndex: number }) => {
+  
+  const DateSelector = ({ fieldName }: { fieldName: `events.${number}.date` }) => {
     const [day, setDay] = React.useState("");
     const [month, setMonth] = React.useState("");
     const [year, setYear] = React.useState("");
 
     React.useEffect(() => {
       if (day && month && year) {
-        form.setValue(`events.${rowIndex}.date`, `${day}/${month}/${year}`);
+        form.setValue(fieldName, `${day}/${month}/${year}`);
       } else {
-        form.setValue(`events.${rowIndex}.date`, "");
+        form.setValue(fieldName, "");
       }
-    }, [day, month, year, rowIndex, form]);
+    }, [day, month, year, fieldName, form]);
 
     return (
       <div className="flex gap-2 justify-center">
@@ -206,137 +219,149 @@ export function PlanForm() {
         
         <div className="text-foreground leading-relaxed mb-8 text-center space-y-4">
             <p>
-                نود نحن، لجنة التنظيم بمحافظة <span id="govDisplay" className="font-bold text-primary">{govDisplay}</span>،
-                أن نُعلم سيادتكم، القائد/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)،
-                والقائد/ <strong className="text-foreground">ريم منصور</strong> (نائب رئيس اللجنة)،
-                والقائد/ <strong className="text-foreground">أحمد حسن</strong> (نائب رئيس اللجنة)،
-                بخطة عمل اللجنة خلال الفترة القادمة.
+            نود نحن، لجنة التنظيم بمحافظة <span id="govDisplay" className="font-bold text-primary">{govDisplay}</span>، أن نُعلم سيادتكم، القائد/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)، ونائبيه، القائد/ <strong className="text-foreground">ريم منصور</strong>، والقائد/ <strong className="text-foreground">أحمد حسن</strong>، بخطة عمل اللجنة خلال الفترة القادمة.
             </p>
         </div>
 
-        <div className="space-y-6">
+        {/* Events Section */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">الفعاليات</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {eventFields.map((field, index) => (
-              <Card key={field.id} className="bg-muted/50 border-border">
-                <CardHeader className="flex flex-row items-center justify-between pb-4">
-                  <CardTitle className="text-xl text-foreground">الفعالية #{index + 1}</CardTitle>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full h-8 w-8"
-                    onClick={() => removeEvent(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name={`events.${index}.details`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ما هو الحدث؟</FormLabel>
-                        <FormControl>
-                          <Input placeholder="تفاصيل الحدث" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`events.${index}.date`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>متى سيقام الحدث؟</FormLabel>
-                        <FormControl>
-                          <>
-                            <DateSelector rowIndex={index} />
-                            <Input type="hidden" {...field} />
-                          </>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`events.${index}.type`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ما هو نوع الحدث؟</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر النوع" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+              <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
+                <p className="font-bold mb-2">الفعالية #{index + 1}: {form.getValues(`events.${index}.details`)}</p>
+                <p><strong>التاريخ:</strong> {form.getValues(`events.${index}.date`)}</p>
+                <p><strong>النوع:</strong> {form.getValues(`events.${index}.type`)}</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 left-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full h-8 w-8"
+                  onClick={() => removeEvent(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
-             <FormMessage>{form.formState.errors.events?.root?.message}</FormMessage>
-        </div>
+             <FormMessage>{form.formState.errors.events?.root?.message || form.formState.errors.events?.message}</FormMessage>
 
-        <div className="mt-4 text-left">
-            <Button type="button" onClick={handleAddEventRow} variant="secondary">
-              + إضافة فعالية
-            </Button>
-        </div>
-
-        <footer className="mt-20 pt-10 grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="text-center">
-                <p className="font-bold text-lg">نائب رئيس اللجنة</p>
-                <div className="space-y-2 mt-4 mx-auto max-w-xs">
-                    {deputyFields.map((field, index) => (
-                      <div key={field.id} className="flex items-center gap-2">
-                          <FormField
-                            control={form.control}
-                            name={`deputies.${index}.name`}
-                            render={({ field }) => (
-                                <FormItem className="flex-grow">
-                                    <FormControl>
-                                      <Input placeholder={`اسم النائب ${index > 0 ? index + 1 : ''}`} {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                           />
-                           {index > 0 && (
-                            <Button type="button" variant="ghost" className="text-destructive hover:text-destructive/90 p-1" onClick={() => removeDeputy(index)}>
-                                <Trash2 className="h-5 w-5" />
-                            </Button>
-                           )}
-                      </div>
-                    ))}
+            {showEventForm && (
+                <div className="p-4 border rounded-md mt-4 space-y-4">
+                    <h4 className="font-bold text-lg">إضافة فعالية جديدة</h4>
+                    <FormField
+                      control={form.control}
+                      name={`events.${eventFields.length}.details` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ما هو الحدث؟</FormLabel>
+                          <FormControl><Input placeholder="تفاصيل الحدث" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`events.${eventFields.length}.date` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>متى سيقام الحدث؟</FormLabel>
+                           <FormControl>
+                            <>
+                              <DateSelector fieldName={field.name as any} />
+                              <Input type="hidden" {...field} />
+                            </>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`events.${eventFields.length}.type` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ما هو نوع الحدث؟</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger></FormControl>
+                            <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="button" onClick={handleAddEventRow}>حفظ الفعالية</Button>
                 </div>
-                <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2 text-sm text-primary hover:text-primary/90" variant="link">
-                    + إضافة نائب آخر
+            )}
+             <div className="mt-4 text-left">
+                <Button type="button" onClick={() => setShowEventForm(true)} variant="secondary" disabled={showEventForm}>
+                  + إضافة فعالية
                 </Button>
             </div>
-             <div className="text-center">
-                <p className="font-bold text-lg">رئيس اللجنة</p>
-                 <FormField
-                    control={form.control}
-                    name="president"
-                    render={({ field }) => (
-                        <FormItem className="mt-4 mx-auto max-w-xs">
-                            <FormControl>
-                                <Input placeholder="الاسم" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                 />
+          </CardContent>
+        </Card>
+
+
+        {/* Signatures Section */}
+        <footer className="mt-10 pt-6 border-t">
+             {!showSignatures ? (
+                <div className="text-center">
+                    <Button type="button" onClick={handleShowSignatures} variant="secondary">
+                        إضافة التوقيعات
+                    </Button>
+                </div>
+            ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="text-center">
+                    <p className="font-bold text-lg">نائب رئيس اللجنة</p>
+                    <div className="space-y-2 mt-4 mx-auto max-w-xs">
+                        {deputyFields.map((field, index) => (
+                          <div key={field.id} className="flex items-center gap-2">
+                              <FormField
+                                control={form.control}
+                                name={`deputies.${index}.name`}
+                                render={({ field }) => (
+                                    <FormItem className="flex-grow">
+                                        <FormControl>
+                                          <Input placeholder={`اسم النائب ${deputyFields.length > 1 ? index + 1 : ''}`} {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                               />
+                               {deputyFields.length > 1 && (
+                                <Button type="button" variant="ghost" className="text-destructive hover:text-destructive/90 p-1" onClick={() => removeDeputy(index)}>
+                                    <Trash2 className="h-5 w-5" />
+                                </Button>
+                               )}
+                          </div>
+                        ))}
+                    </div>
+                     <FormMessage>{form.formState.errors.deputies?.root?.message || form.formState.errors.deputies?.message}</FormMessage>
+                    <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2 text-sm text-primary hover:text-primary/90" variant="link">
+                        + إضافة نائب آخر
+                    </Button>
+                </div>
+                 <div className="text-center">
+                    <p className="font-bold text-lg">رئيس اللجنة</p>
+                     <FormField
+                        control={form.control}
+                        name="president"
+                        render={({ field }) => (
+                            <FormItem className="mt-4 mx-auto max-w-xs">
+                                <FormControl>
+                                    <Input placeholder="الاسم" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                     />
+                </div>
             </div>
+             )}
         </footer>
+
 
         <div className="mt-12 text-center">
           <Button type="submit" size="lg" disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition shadow-lg w-48">
