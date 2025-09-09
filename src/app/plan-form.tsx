@@ -86,13 +86,6 @@ export function PlanForm() {
   const handleAddEventRow = () => {
     appendEvent({ details: "", date: "", type: "" });
   };
-  
-  React.useEffect(() => {
-    if (eventFields.length === 0) {
-        appendEvent({ details: "", date: "", type: "اونلاين" });
-        appendEvent({ details: "", date: "", type: "اونلاين" });
-    }
-  }, [appendEvent, eventFields.length]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
@@ -113,7 +106,13 @@ export function PlanForm() {
           className: "bg-green-600 text-white",
         });
         setTimeout(() => {
-            form.reset();
+            form.reset({
+              governorate: "",
+              month: "",
+              events: [],
+              deputies: [{ name: "" }],
+              president: "",
+            });
             setGovDisplay("...............");
         }, 2500);
 
@@ -161,9 +160,9 @@ export function PlanForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <h3 className="text-3xl font-bold text-center text-red-700 my-6">خطة الشهر</h3>
+        <h3 className="text-3xl font-bold text-center text-primary my-6">خطة الشهر</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg mb-8 p-4 bg-gray-50 rounded-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg mb-8 p-4 bg-muted/50 rounded-md">
             <FormField
               control={form.control}
               name="governorate"
@@ -205,26 +204,26 @@ export function PlanForm() {
             />
         </div>
         
-        <div className="text-gray-700 leading-relaxed mb-8 text-center space-y-4">
+        <div className="text-foreground leading-relaxed mb-8 text-center space-y-4">
             <p>
-                نود نحن، لجنة التنظيم بمحافظة <span id="govDisplay" className={cn(govDisplay === 'الشرقية' && "text-black font-bold")}>{govDisplay}</span>،
-                أن نُعلم سيادتكم، القائد/ <strong className="text-gray-900">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)،
-                والقائد/ <strong className="text-gray-900">ريم منصور</strong> (نائب رئيس اللجنة)،
-                والقائد/ <strong className="text-gray-900">أحمد حسن</strong> (نائب رئيس اللجنة)،
+                نود نحن، لجنة التنظيم بمحافظة <span id="govDisplay" className="font-bold text-primary">{govDisplay}</span>،
+                أن نُعلم سيادتكم، القائد/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)،
+                والقائد/ <strong className="text-foreground">ريم منصور</strong> (نائب رئيس اللجنة)،
+                والقائد/ <strong className="text-foreground">أحمد حسن</strong> (نائب رئيس اللجنة)،
                 بخطة عمل اللجنة خلال الفترة القادمة.
             </p>
         </div>
 
         <div className="space-y-6">
             {eventFields.map((field, index) => (
-              <Card key={field.id} className="bg-gray-50 border-gray-200">
+              <Card key={field.id} className="bg-muted/50 border-border">
                 <CardHeader className="flex flex-row items-center justify-between pb-4">
-                  <CardTitle className="text-xl text-gray-800">الفعالية #{index + 1}</CardTitle>
+                  <CardTitle className="text-xl text-foreground">الفعالية #{index + 1}</CardTitle>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="bg-red-500 hover:bg-red-600 text-white rounded-full h-8 w-8"
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full h-8 w-8"
                     onClick={() => removeEvent(index)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -287,7 +286,7 @@ export function PlanForm() {
         </div>
 
         <div className="mt-4 text-left">
-            <Button type="button" onClick={handleAddEventRow} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition">
+            <Button type="button" onClick={handleAddEventRow} variant="secondary">
               + إضافة فعالية
             </Button>
         </div>
@@ -311,14 +310,14 @@ export function PlanForm() {
                             )}
                            />
                            {index > 0 && (
-                            <Button type="button" variant="ghost" className="text-red-500 hover:text-red-700 p-1" onClick={() => removeDeputy(index)}>
+                            <Button type="button" variant="ghost" className="text-destructive hover:text-destructive/90 p-1" onClick={() => removeDeputy(index)}>
                                 <Trash2 className="h-5 w-5" />
                             </Button>
                            )}
                       </div>
                     ))}
                 </div>
-                <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2 text-sm text-blue-600 hover:text-blue-800" variant="link">
+                <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2 text-sm text-primary hover:text-primary/90" variant="link">
                     + إضافة نائب آخر
                 </Button>
             </div>
@@ -355,3 +354,5 @@ export function PlanForm() {
     </Form>
   );
 }
+
+    
