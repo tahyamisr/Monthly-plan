@@ -362,7 +362,7 @@ export function PlanForm() {
 
 
         <div className="mt-12 text-center">
-          <Button type="submit" size="lg" disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition shadow-lg w-48">
+          <Button type="submit" size="lg" disabled={isPending || !showSignatures} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition shadow-lg w-48">
             {isPending ? (
               <>
                 <Loader2 className="ml-2 h-5 w-5 animate-spin" />
