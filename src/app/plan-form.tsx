@@ -64,6 +64,10 @@ export function PlanForm() {
   const [showEventForm, setShowEventForm] = React.useState(false);
   const [showSignatures, setShowSignatures] = React.useState(false);
 
+  // State for the new event being created
+  const [newEvent, setNewEvent] = React.useState({ details: "", date: "", type: "" });
+  const [newDate, setNewDate] = React.useState({ day: "", month: "", year: "" });
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,7 +91,23 @@ export function PlanForm() {
   });
 
   const handleAddEventRow = () => {
-    appendEvent({ details: "", date: "", type: "" });
+    const fullDate = newDate.day && newDate.month && newDate.year ? `${newDate.day}/${newDate.month}/${newDate.year}` : "";
+    const eventToadd = { ...newEvent, date: fullDate };
+
+    // Simple validation before adding
+    if (!eventToadd.details || !eventToadd.date || !eventToadd.type) {
+        toast({
+            title: "بيانات غير مكتملة",
+            description: "الرجاء ملء جميع حقول الفعالية قبل الحفظ.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    appendEvent(eventToadd);
+    // Reset for next event
+    setNewEvent({ details: "", date: "", type: "" });
+    setNewDate({ day: "", month: "", year: "" });
     setShowEventForm(false);
   };
   
@@ -139,30 +159,18 @@ export function PlanForm() {
     });
   }
   
-  const DateSelector = ({ fieldName }: { fieldName: `events.${number}.date` }) => {
-    const [day, setDay] = React.useState("");
-    const [month, setMonth] = React.useState("");
-    const [year, setYear] = React.useState("");
-
-    React.useEffect(() => {
-      if (day && month && year) {
-        form.setValue(fieldName, `${day}/${month}/${year}`);
-      } else {
-        form.setValue(fieldName, "");
-      }
-    }, [day, month, year, fieldName, form]);
-
+  const DateSelector = ({ value, onChange }: { value: {day: string, month: string, year: string}, onChange: (date: {day: string, month: string, year: string}) => void }) => {
     return (
       <div className="flex gap-2 justify-center">
-        <Select onValueChange={setDay} value={day}>
+        <Select onValueChange={(day) => onChange({...value, day})} value={value.day}>
           <SelectTrigger><SelectValue placeholder="اليوم" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 31 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
-        <Select onValueChange={setMonth} value={month}>
+        <Select onValueChange={(month) => onChange({...value, month})} value={value.month}>
           <SelectTrigger><SelectValue placeholder="الشهر" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 12 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
-         <Select onValueChange={setYear} value={year}>
+         <Select onValueChange={(year) => onChange({...value, year})} value={value.year}>
           <SelectTrigger><SelectValue placeholder="السنة" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 6 }, (_, i) => <SelectItem key={i} value={`${new Date().getFullYear() + i}`}>{new Date().getFullYear() + i}</SelectItem>)}</SelectContent>
         </Select>
@@ -231,9 +239,9 @@ export function PlanForm() {
           <CardContent className="space-y-4">
             {eventFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
-                <p className="font-bold mb-2">الفعالية #{index + 1}: {form.watch(`events.${index}.details`)}</p>
-                <p><strong>التاريخ:</strong> {form.watch(`events.${index}.date`)}</p>
-                <p><strong>النوع:</strong> {form.watch(`events.${index}.type`)}</p>
+                <p className="font-bold mb-2">الفعالية #{index + 1}: {field.details}</p>
+                <p><strong>التاريخ:</strong> {field.date}</p>
+                <p><strong>النوع:</strong> {field.type}</p>
                 <Button
                   type="button"
                   variant="ghost"
@@ -250,47 +258,31 @@ export function PlanForm() {
             {showEventForm && (
                 <div className="p-4 border rounded-md mt-4 space-y-4">
                     <h4 className="font-bold text-lg">إضافة فعالية جديدة</h4>
-                    <FormField
-                      control={form.control}
-                      name={`events.${eventFields.length}.details` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ما هو الحدث؟</FormLabel>
-                          <FormControl><Input placeholder="تفاصيل الحدث" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`events.${eventFields.length}.date` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>متى سيقام الحدث؟</FormLabel>
-                           <FormControl>
-                            <>
-                              <DateSelector fieldName={field.name as any} />
-                              <Input type="hidden" {...field} />
-                            </>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`events.${eventFields.length}.type` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ما هو نوع الحدث؟</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger></FormControl>
-                            <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormItem>
+                      <FormLabel>ما هو الحدث؟</FormLabel>
+                      <FormControl>
+                          <Input 
+                              placeholder="تفاصيل الحدث" 
+                              value={newEvent.details}
+                              onChange={(e) => setNewEvent({...newEvent, details: e.target.value})}
+                          />
+                      </FormControl>
+                    </FormItem>
+                    <FormItem>
+                      <FormLabel>متى سيقام الحدث؟</FormLabel>
+                       <FormControl>
+                          <DateSelector value={newDate} onChange={setNewDate} />
+                      </FormControl>
+                    </FormItem>
+                    <FormItem>
+                      <FormLabel>ما هو نوع الحدث؟</FormLabel>
+                      <Select 
+                          onValueChange={(value) => setNewEvent({...newEvent, type: value})} 
+                          value={newEvent.type}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger></FormControl>
+                        <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </FormItem>
                     <Button type="button" onClick={handleAddEventRow}>حفظ الفعالية</Button>
                 </div>
             )}
@@ -379,5 +371,3 @@ export function PlanForm() {
     </Form>
   );
 }
-
-    
