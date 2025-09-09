@@ -4,8 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import React, { useTransition } from "react";
-import { format } from "date-fns";
-import { ar } from 'date-fns/locale';
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,14 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -41,35 +31,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
-import { CalendarIcon, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
 
 const formSchema = z.object({
-  governorate: z.string().min(2, "اسم المحافظة مطلوب."),
-  month: z.string({ required_error: "الرجاء اختيار الشهر." }),
+  governorate: z.string().min(1, "الرجاء اختيار المحافظة."),
+  month: z.string().min(1, "الرجاء اختيار الشهر."),
   events: z
     .array(
       z.object({
-        details: z.string().min(5, "يجب أن لا تقل التفاصيل عن 5 أحرف."),
-        date: z.date({ required_error: "التاريخ مطلوب." }),
-        type: z.string({ required_error: "الرجاء اختيار نوع الفعالية." }),
+        details: z.string().min(1, "تفاصيل الحدث مطلوبة."),
+        date: z.string().min(1, "التاريخ مطلوب."),
+        type: z.string().min(1, "نوع الحدث مطلوب."),
       })
     )
     .min(1, "يجب إضافة فعالية واحدة على الأقل."),
-  deputies: z
-    .array(
-      z.object({
-        name: z.string().min(2, "اسم النائب مطلوب."),
-      })
-    )
-    .min(1, "يجب إضافة توقيع نائب واحد على الأقل."),
+  deputies: z.array(z.object({ name: z.string().min(2, "اسم النائب مطلوب.") })),
+  president: z.string().min(2, "اسم الرئيس مطلوب."),
 });
 
 const months = [
@@ -77,29 +56,27 @@ const months = [
   "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
 ];
 
-const eventTypes = ["ثقافي", "اجتماعي", "رياضي", "أكاديمي", "فني", "تطوعي", "أخرى"];
+const governorates = [
+    "الجيزة", "القاهرة", "الدقهلية", "السويس", "البحيرة", 
+    "الشرقية", "المنوفية", "الفيوم", "كفر الشيخ", "قنا", 
+    "اسوان", "المنيا", "الاسكندريه", "الاسماعيليه", "القليوبية"
+];
 
-type EventFormData = {
-    details: string;
-    date: Date;
-    type: string;
-};
+const eventTypes = ["اونلاين", "اوفلاين"];
 
 export function PlanForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const [eventFormData, setEventFormData] = React.useState<EventFormData>({
-    details: "",
-    date: new Date(),
-    type: "",
-  });
+  const [govDisplay, setGovDisplay] = React.useState("...............");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       governorate: "",
+      month: "",
       events: [],
-      deputies: [],
+      deputies: [{ name: "" }],
+      president: "",
     },
   });
 
@@ -112,30 +89,43 @@ export function PlanForm() {
     control: form.control,
     name: "deputies",
   });
-  
-  const handleAddEvent = () => {
-    if (eventFormData.details.length < 5 || !eventFormData.date || !eventFormData.type) {
-      toast({
-        title: "خطأ!",
-        description: "يرجى تعبئة جميع حقول الفعالية.",
-        variant: "destructive",
-      });
-      return;
-    }
-    appendEvent(eventFormData);
-    setEventFormData({ details: "", date: new Date(), type: "" });
-  };
 
+  const handleAddEventRow = () => {
+    appendEvent({ details: "", date: "", type: "" });
+  };
+  
+  React.useEffect(() => {
+    // Add two initial rows
+    if (eventFields.length === 0) {
+        appendEvent({ details: "", date: "", type: "اونلاين" });
+        appendEvent({ details: "", date: "", type: "اونلاين" });
+    }
+  }, [appendEvent, eventFields.length]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
-      const result = await submitPlan(values);
+      // Massage data to match webhook expectations
+      const submissionData = {
+        governorate: values.governorate,
+        month: values.month,
+        presidentSign: values.president,
+        deputySigns: values.deputies.map(d => d.name).filter(Boolean),
+        events: values.events.map(e => ({ name: e.details, date: e.date, type: e.type }))
+      };
+      
+      const result = await submitPlan(submissionData as any); // Cast because server action has different schema now
       if (result.success) {
         toast({
-          title: "تم بنجاح!",
-          description: result.message,
+          title: "تم الإرسال بنجاح!",
+          description: "سيتم إعادة تحميل النموذج الآن...",
+          variant: "default",
+          className: "bg-green-600 text-white",
         });
-        form.reset();
+        setTimeout(() => {
+            form.reset();
+            setGovDisplay("...............");
+        }, 2500);
+
       } else {
         toast({
           title: "خطأ!",
@@ -145,27 +135,61 @@ export function PlanForm() {
       }
     });
   }
+
+  const DateSelector = ({ rowIndex }: { rowIndex: number }) => {
+    const [day, setDay] = React.useState("");
+    const [month, setMonth] = React.useState("");
+    const [year, setYear] = React.useState("");
+
+    React.useEffect(() => {
+      if (day && month && year) {
+        form.setValue(`events.${rowIndex}.date`, `${day}/${month}/${year}`);
+      } else {
+        form.setValue(`events.${rowIndex}.date`, "");
+      }
+    }, [day, month, year, rowIndex]);
+
+    return (
+      <div className="flex gap-1 justify-center">
+        <Select onValueChange={setDay} value={day}>
+          <SelectTrigger className="w-1/3 h-9"><SelectValue placeholder="اليوم" /></SelectTrigger>
+          <SelectContent>{Array.from({ length: 31 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select onValueChange={setMonth} value={month}>
+          <SelectTrigger className="w-1/3 h-9"><SelectValue placeholder="الشهر" /></SelectTrigger>
+          <SelectContent>{Array.from({ length: 12 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
+        </Select>
+         <Select onValueChange={setYear} value={year}>
+          <SelectTrigger className="w-1/3 h-9"><SelectValue placeholder="السنة" /></SelectTrigger>
+          <SelectContent>{Array.from({ length: 6 }, (_, i) => <SelectItem key={i} value={`${new Date().getFullYear() + i}`}>{new Date().getFullYear() + i}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+    );
+  };
   
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>معلومات الخطة</CardTitle>
-            <CardDescription>
-              يرجى إدخال المعلومات الأساسية للخطة الشهرية.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-2 gap-6">
+        <h3 className="text-3xl font-bold text-center text-red-700 my-6">خطة الشهر</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg mb-8 p-4 bg-gray-50 rounded-md">
             <FormField
               control={form.control}
               name="governorate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>المحافظة</FormLabel>
-                  <FormControl>
-                    <Input placeholder="مثال: القاهرة" {...field} />
-                  </FormControl>
+                  <FormLabel className="font-bold">المحافظة:</FormLabel>
+                  <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      setGovDisplay(value || "...............");
+                  }} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {governorates.map((gov) => <SelectItem key={gov} value={gov}>{gov}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -175,220 +199,137 @@ export function PlanForm() {
               name="month"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الشهر</FormLabel>
+                  <FormLabel className="font-bold">الشهر:</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر الشهر" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="اختر الشهر" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {months.map((month) => (
-                        <SelectItem key={month} value={month}>{month}</SelectItem>
-                      ))}
+                      {months.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </CardContent>
-        </Card>
+        </div>
+        
+        <div className="text-gray-700 leading-relaxed mb-8 text-center space-y-4">
+            <p>نود نحن لجنة التنظيم محافظة <span id="govDisplay" className={cn(govDisplay === 'الشرقية' && "text-black font-bold")}>{govDisplay}</span> إعلام سيادتكم رئيس لجنة التنظيم المركزية القائد/ 
+                <strong className="text-gray-900"> اسلام فارس</strong>
+                ونائبيه القائد/ <strong className="text-gray-900"> ريم منصور</strong>
+                والقائد/ <strong className="text-gray-900"> احمد حسن</strong>
+                بما سوف تقوم به اللجنة خلال الفترة القادمة.
+            </p>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>إضافة فعالية جديدة</CardTitle>
-            <CardDescription>
-              أدخل تفاصيل الفعالية واضغط على زر الإضافة.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-                <FormLabel>تفاصيل الفعالية</FormLabel>
-                <Textarea 
-                    placeholder="وصف موجز للفعالية..." 
-                    value={eventFormData.details}
-                    onChange={(e) => setEventFormData({...eventFormData, details: e.target.value})}
-                    className="min-h-[60px]"
-                />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <FormLabel>التاريخ</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-right font-normal",
-                                !eventFormData.date && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="ml-2 h-4 w-4" />
-                              {eventFormData.date ? (
-                                format(eventFormData.date, "PPP", { locale: ar })
-                              ) : (
-                                <span>اختر تاريخ</span>
-                              )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={eventFormData.date}
-                            onSelect={(date) => date && setEventFormData({...eventFormData, date})}
-                            disabled={(date) => date < new Date("1900-01-01")}
-                            initialFocus
-                            locale={ar}
-                            dir="rtl"
-                          />
-                        </PopoverContent>
-                    </Popover>
-                 </div>
-                 <div className="space-y-2">
-                    <FormLabel>نوع الفعالية</FormLabel>
-                     <Select 
-                        value={eventFormData.type}
-                        onValueChange={(value) => setEventFormData({...eventFormData, type: value})}
-                     >
-                        <SelectTrigger>
-                            <SelectValue placeholder="اختر النوع" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {eventTypes.map((type) => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                 </div>
-            </div>
-             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={handleAddEvent}
-            >
-              <PlusCircle className="ml-2 h-4 w-4" />
-              إضافة الفعالية للجدول
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>الفعاليات والأنشطة المضافة</CardTitle>
-            <CardDescription>
-              قائمة بالفعاليات التي تمت إضافتها للخطة.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
+        <div className="overflow-x-auto">
+              <Table className="min-w-full bg-white border border-gray-300 text-center">
+                <TableHeader className="bg-gray-800 text-white">
                   <TableRow>
-                    <TableHead className="w-[50%]">تفاصيل الفعالية</TableHead>
-                    <TableHead>التاريخ</TableHead>
-                    <TableHead>نوع الفعالية</TableHead>
-                    <TableHead className="text-left">إجراء</TableHead>
+                    <TableHead className="py-3 px-2 border-b text-white">م</TableHead>
+                    <TableHead className="py-3 px-4 border-b text-white">الحدث</TableHead>
+                    <TableHead className="py-3 px-4 border-b text-white">التاريخ</TableHead>
+                    <TableHead className="py-3 px-4 border-b text-white">نوع الحدث</TableHead>
+                    <TableHead className="py-3 px-2 border-b text-white">إجراء</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {eventFields.map((field, index) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium">{field.details}</TableCell>
-                       <TableCell>
-                        {format(field.date, "PPP", { locale: ar })}
+                    <TableRow key={field.id} className="hover:bg-gray-50">
+                      <TableCell className="py-2 px-2 border-b font-bold">{index + 1}</TableCell>
+                      <TableCell className="py-2 px-4 border-b">
+                        <FormField control={form.control} name={`events.${index}.details`} render={({ field }) => <Input placeholder="تفاصيل الحدث" {...field} className="h-9"/>} />
                       </TableCell>
-                       <TableCell>{field.type}</TableCell>
-                      <TableCell className="text-left">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeEvent(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                       <TableCell className="py-2 px-4 border-b">
+                         <DateSelector rowIndex={index} />
+                         <FormField control={form.control} name={`events.${index}.date`} render={({ field }) => <Input type="hidden" {...field} />} />
+                      </TableCell>
+                       <TableCell className="py-2 px-4 border-b">
+                         <FormField
+                            control={form.control}
+                            name={`events.${index}.type`}
+                            render={({ field }) => (
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger className="h-9"><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                                </Select>
+                            )}
+                         />
+                      </TableCell>
+                      <TableCell className="py-2 px-2 border-b">
+                        <Button type="button" variant="ghost" size="icon" className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full h-auto w-auto" onClick={() => removeEvent(index)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {eventFields.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                            لا توجد فعاليات مضافة.
-                        </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
-               <FormField
-                  control={form.control}
-                  name="events"
-                  render={() => (
-                     <FormItem>
-                       <FormMessage className="mt-2" />
-                     </FormItem>
-                  )}
-                />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>توقيعات النواب</CardTitle>
-            <CardDescription>
-              أضف أسماء النواب للموافقة على الخطة.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {deputyFields.map((field, index) => (
-              <div key={field.id} className="flex items-center gap-4">
-                <FormField
-                  control={form.control}
-                  name={`deputies.${index}.name`}
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input placeholder={`اسم النائب ${index + 1}`} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeDeputy(index)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
-             <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={() => appendDeputy({ name: "" })}
-            >
-              <PlusCircle className="ml-2 h-4 w-4" />
-              إضافة توقيع نائب
+              <FormMessage>{form.formState.errors.events?.root?.message}</FormMessage>
+        </div>
+        <div className="mt-4 text-left">
+            <Button type="button" onClick={handleAddEventRow} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition">
+              + إضافة حدث
             </Button>
-          </CardContent>
-        </Card>
+        </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" size="lg" disabled={isPending} className="font-bold">
+        <footer className="mt-20 pt-10 grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="text-center">
+                <p className="font-bold text-lg">نائب رئيس اللجنة</p>
+                <div className="space-y-2 mt-4 mx-auto max-w-xs">
+                    {deputyFields.map((field, index) => (
+                      <div key={field.id} className="flex items-center gap-2">
+                          <FormField
+                            control={form.control}
+                            name={`deputies.${index}.name`}
+                            render={({ field }) => (
+                                <FormItem className="flex-grow">
+                                    <FormControl>
+                                      <Input placeholder={`اسم النائب ${index > 0 ? index + 1 : ''}`} {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                           />
+                           {index > 0 && (
+                            <Button type="button" variant="ghost" className="text-red-500 hover:text-red-700 p-1" onClick={() => removeDeputy(index)}>
+                                <Trash2 className="h-5 w-5" />
+                            </Button>
+                           )}
+                      </div>
+                    ))}
+                </div>
+                <Button type="button" onClick={() => appendDeputy({ name: "" })} className="mt-2 text-sm text-blue-600 hover:text-blue-800" variant="link">
+                    + إضافة نائب آخر
+                </Button>
+            </div>
+             <div className="text-center">
+                <p className="font-bold text-lg">رئيس اللجنة</p>
+                 <FormField
+                    control={form.control}
+                    name="president"
+                    render={({ field }) => (
+                        <FormItem className="mt-4 mx-auto max-w-xs">
+                            <FormControl>
+                                <Input placeholder="الاسم" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                 />
+            </div>
+        </footer>
+
+        <div className="mt-12 text-center">
+          <Button type="submit" size="lg" disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition shadow-lg w-48">
             {isPending ? (
               <>
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                جاري التقديم...
+                <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                <span>جار الإرسال...</span>
               </>
             ) : (
-              "تقديم الخطة"
+              "إرسال الخطة"
             )}
           </Button>
         </div>

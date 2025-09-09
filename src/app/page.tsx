@@ -1,22 +1,33 @@
-import { CalendarCheck2 } from 'lucide-react';
+import Image from 'next/image';
 import { PlanForm } from './plan-form';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <header className="text-center mb-8">
-          <div className="inline-block p-4 bg-primary rounded-full mb-4 shadow-lg">
-            <CalendarCheck2 className="text-primary-foreground h-12 w-12" />
+    <main className="min-h-screen bg-gray-100 text-foreground p-4 sm:p-6 md:p-8">
+      <div className="max-w-5xl mx-auto bg-white p-8 my-10 rounded-lg shadow-md border border-gray-200">
+        <header className="flex flex-col sm:flex-row justify-around items-center mb-8 pb-4 border-b">
+          <Image
+            src="https://www.dropbox.com/scl/fi/cdpfbk7nlzbn5mb13nmbt/.jpg?rlkey=5gaov2yymvxp4isbw9crxiuza&raw=1"
+            alt="شعار اتحاد طلاب تحيا مصر - اللجنة المركزية"
+            width={144}
+            height={144}
+            className="object-contain mb-4 sm:mb-0"
+            data-ai-hint="logo organization"
+          />
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-800">اتحاد طلاب تحيا مصر</h1>
+            <h2 className="text-xl text-gray-600">اللجنة المركزية للتنظيم</h2>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">
-            Planify Egypt
-          </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            مرحباً بك في أداة تخطيط الفعاليات والأنشطة الطلابية. قم بتعبئة النموذج
-            لتقديم خطتك الشهرية.
-          </p>
+          <Image
+            src="https://www.dropbox.com/scl/fi/fnot6lk4eky6a51iygybg/.png?rlkey=la54x8gme7xmk8zwo4vvfqrjw&raw=1"
+            alt="شعار اتحاد طلاب تحيا مصر"
+            width={144}
+            height={144}
+            className="object-contain mt-4 sm:mt-0"
+            data-ai-hint="logo organization"
+          />
         </header>
+
         <PlanForm />
       </div>
     </main>

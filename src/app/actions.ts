@@ -2,25 +2,20 @@
 
 import { z } from 'zod';
 
-const formSchema = z.object({
-  governorate: z.string().min(2, 'Governorate is required.'),
-  month: z.string({ required_error: 'Please select a month.' }),
-  events: z
-    .array(
-      z.object({
-        details: z.string().min(5, 'Details must be at least 5 characters.'),
-        date: z.date({ required_error: 'A date is required.' }),
-        type: z.string({ required_error: 'Please select an event type.' }),
-      })
-    )
-    .min(1, 'At least one event is required.'),
-  deputies: z
-    .array(
-      z.object({
-        name: z.string().min(2, 'Deputy name is required.'),
-      })
-    )
-    .min(1, 'At least one deputy signature is required.'),
+// This schema should ideally match the one in plan-form.tsx, 
+// but we'll keep it flexible to accept the massaged data.
+const webhookSchema = z.object({
+  governorate: z.string(),
+  month: z.string(),
+  presidentSign: z.string(),
+  deputySigns: z.array(z.string()),
+  events: z.array(
+    z.object({
+      name: z.string(),
+      date: z.string(),
+      type: z.string(),
+    })
+  ),
 });
 
 type FormState = {
@@ -29,13 +24,15 @@ type FormState = {
 };
 
 export async function submitPlan(
-  data: z.infer<typeof formSchema>
+  data: z.infer<typeof webhookSchema>
 ): Promise<FormState> {
-  const validatedFields = formSchema.safeParse(data);
+  // The data is already shaped by the client component, so we can send it directly.
+  // We can still do a final validation here.
+  const validatedFields = webhookSchema.safeParse(data);
 
   if (!validatedFields.success) {
     return {
-      message: 'Invalid form data. Please check your inputs.',
+      message: 'Invalid data format. Please check your inputs.',
       success: false,
     };
   }
@@ -50,8 +47,8 @@ export async function submitPlan(
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Webhook Error:', errorData);
+      const errorText = await response.text();
+      console.error('Webhook Error:', errorText);
       return {
         message: `Submission failed. The server responded with status: ${response.status}.`,
         success: false,
