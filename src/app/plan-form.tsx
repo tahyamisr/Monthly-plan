@@ -231,9 +231,9 @@ export function PlanForm() {
           <CardContent className="space-y-4">
             {eventFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
-                <p className="font-bold mb-2">الفعالية #{index + 1}: {form.getValues(`events.${index}.details`)}</p>
-                <p><strong>التاريخ:</strong> {form.getValues(`events.${index}.date`)}</p>
-                <p><strong>النوع:</strong> {form.getValues(`events.${index}.type`)}</p>
+                <p className="font-bold mb-2">الفعالية #{index + 1}: {form.watch(`events.${index}.details`)}</p>
+                <p><strong>التاريخ:</strong> {form.watch(`events.${index}.date`)}</p>
+                <p><strong>النوع:</strong> {form.watch(`events.${index}.type`)}</p>
                 <Button
                   type="button"
                   variant="ghost"
@@ -379,3 +379,5 @@ export function PlanForm() {
     </Form>
   );
 }
+
+    
