@@ -75,7 +75,7 @@ export function PlanForm() {
       governorate: "",
       month: "",
       events: [],
-      deputies: [],
+      deputies: [{ name: "" }],
       president: "",
     },
   });
@@ -113,9 +113,6 @@ export function PlanForm() {
   
   const handleShowSignatures = () => {
       setShowSignatures(true);
-      if (deputyFields.length === 0) {
-        appendDeputy({ name: "" });
-      }
   }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -141,7 +138,7 @@ export function PlanForm() {
               governorate: "",
               month: "",
               events: [],
-              deputies: [],
+              deputies: [{ name: "" }],
               president: "",
             });
             setGovDisplay("...............");
@@ -239,7 +236,10 @@ export function PlanForm() {
           <CardContent className="space-y-4">
             {eventFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
-                <p className="font-bold mb-2">الفعالية #{index + 1}: {field.details}</p>
+                <div className="mb-2">
+                    <p className="font-bold">الفعالية #{index + 1}:</p>
+                    <p>{field.details}</p>
+                </div>
                 <p><strong>التاريخ:</strong> {field.date}</p>
                 <p><strong>النوع:</strong> {field.type}</p>
                 <Button
