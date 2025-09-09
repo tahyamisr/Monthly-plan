@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import React, { useTransition } from "react";
+import React, { useTransition, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
 import { Loader2, Trash2, Pencil } from "lucide-react";
+
+declare global {
+  interface Window {
+    Telegram: any;
+  }
+}
 
 const formSchema = z.object({
   governorate: z.string().min(1, "الرجاء اختيار المحافظة."),
@@ -69,6 +75,17 @@ export function PlanForm() {
   const [newEvent, setNewEvent] = React.useState({ details: "", date: "", type: "" });
   const [newDate, setNewDate] = React.useState({ day: "", month: "", year: "" });
 
+  const [telegramUser, setTelegramUser] = useState<any>(null);
+
+  useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      const user = window.Telegram.WebApp.initDataUnsafe?.user;
+      if (user) {
+        setTelegramUser(user);
+      }
+    }
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -151,7 +168,13 @@ export function PlanForm() {
         month: values.month,
         presidentSign: values.president,
         deputySigns: values.deputies.map(d => d.name).filter(Boolean),
-        events: values.events.map(e => ({ name: e.details, date: e.date, type: e.type }))
+        events: values.events.map(e => ({ name: e.details, date: e.date, type: e.type })),
+        telegramUser: telegramUser ? {
+          id: telegramUser.id,
+          firstName: telegramUser.first_name,
+          lastName: telegramUser.last_name,
+          username: telegramUser.username,
+        } : null,
       };
       
       const result = await submitPlan(submissionData as any);

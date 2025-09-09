@@ -2,6 +2,13 @@
 
 import { z } from 'zod';
 
+const telegramUserSchema = z.object({
+  id: z.number(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  username: z.string().optional(),
+}).nullable();
+
 // This schema should ideally match the one in plan-form.tsx, 
 // but we'll keep it flexible to accept the massaged data.
 const webhookSchema = z.object({
@@ -16,6 +23,7 @@ const webhookSchema = z.object({
       type: z.string(),
     })
   ),
+  telegramUser: telegramUserSchema,
 });
 
 type FormState = {
@@ -31,6 +39,7 @@ export async function submitPlan(
   const validatedFields = webhookSchema.safeParse(data);
 
   if (!validatedFields.success) {
+    console.error('Validation Errors:', validatedFields.error.flatten());
     return {
       message: 'Invalid data format. Please check your inputs.',
       success: false,

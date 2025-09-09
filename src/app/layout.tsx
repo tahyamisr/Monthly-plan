@@ -21,6 +21,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
       </head>
       <body className="font-body antialiased">
         {children}
