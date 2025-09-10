@@ -23,7 +23,7 @@ export default function Home() {
 
         <PlanForm />
       </div>
-      <footer className="text-center p-4 text-muted-foreground text-sm">
+      <footer className="text-center p-4 text-muted-foreground text-sm font-bold">
         اعداد وتنفيذ لجنة التنظيم المركزية
       </footer>
     </main>
