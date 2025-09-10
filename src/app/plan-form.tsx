@@ -80,9 +80,12 @@ export function PlanForm() {
   
   const [editingEventIndex, setEditingEventIndex] = React.useState<number | null>(null);
 
+  const initialNewEventState = { details: "", date: "", type: "" };
+  const initialNewDateState = { day: "", month: "", year: new Date().getFullYear().toString() };
+
   // State for the new/editing event being created
-  const [newEvent, setNewEvent] = React.useState({ details: "", date: "", type: "" });
-  const [newDate, setNewDate] = React.useState({ day: "", month: "", year: "" });
+  const [newEvent, setNewEvent] = React.useState(initialNewEventState);
+  const [newDate, setNewDate] = React.useState(initialNewDateState);
 
   const [telegramUser, setTelegramUser] = useState<any>(null);
 
@@ -139,16 +142,16 @@ export function PlanForm() {
     }
 
     // Reset form and state
-    setNewEvent({ details: "", date: "", type: "" });
-    setNewDate({ day: "", month: "", year: "" });
+    setNewEvent(initialNewEventState);
+    setNewDate(initialNewDateState);
     setShowEventForm(false);
     setEditingEventIndex(null);
   };
   
   const handleAddNewEventClick = () => {
     setEditingEventIndex(null);
-    setNewEvent({ details: "", date: "", type: "" });
-    setNewDate({ day: "", month: "", year: "" });
+    setNewEvent(initialNewEventState);
+    setNewDate(initialNewDateState);
     setShowEventForm(true);
   };
 
