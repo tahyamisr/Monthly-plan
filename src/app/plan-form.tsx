@@ -149,9 +149,16 @@ export function PlanForm() {
   };
   
   const handleAddNewEventClick = () => {
+    const monthIndex = months.indexOf(selectedMonth);
+    const monthNumber = monthIndex !== -1 ? (monthIndex + 1).toString() : "";
+    
     setEditingEventIndex(null);
     setNewEvent(initialNewEventState);
-    setNewDate(initialNewDateState);
+    setNewDate({
+      day: "",
+      month: monthNumber,
+      year: new Date().getFullYear().toString(),
+    });
     setShowEventForm(true);
   };
 
@@ -357,7 +364,7 @@ export function PlanForm() {
                 </div>
             )}
              <div className="mt-4 text-center">
-                <Button type="button" onClick={handleAddNewEventClick} variant="secondary" disabled={showEventForm}>
+                <Button type="button" onClick={handleAddNewEventClick} variant="secondary" disabled={showEventForm || !selectedMonth}>
                   اضافة حدث +
                 </Button>
             </div>
