@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
-import { Loader2, Trash2, Pencil } from "lucide-react";
+import { Loader2, Trash2, Pencil, CheckCircle2 } from "lucide-react";
 
 declare global {
   interface Window {
@@ -77,6 +77,7 @@ export function PlanForm() {
   const [govDisplay, setGovDisplay] = React.useState("...............");
   const [showEventForm, setShowEventForm] = React.useState(false);
   const [showSignatures, setShowSignatures] = React.useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
   
   const [editingEventIndex, setEditingEventIndex] = React.useState<number | null>(null);
 
@@ -198,17 +199,12 @@ export function PlanForm() {
       
       const result = await submitPlan(submissionData as any);
       if (result.success) {
-        toast({
-          title: "تم الإرسال بنجاح!",
-          description: "سيتم إغلاق الواجهة الآن...",
-          variant: "default",
-          className: "bg-green-600 text-white",
-        });
+        setShowSuccessOverlay(true);
         setTimeout(() => {
           if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.close();
           }
-        }, 1500);
+        }, 2000);
 
       } else {
         toast({
@@ -239,6 +235,16 @@ export function PlanForm() {
     );
   };
   
+  if (showSuccessOverlay) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-green-600 text-white">
+        <CheckCircle2 className="h-24 w-24 mb-6 animate-pulse" />
+        <h2 className="text-4xl font-bold mb-2">تم الإرسال بنجاح!</h2>
+        <p className="text-xl">سيتم إغلاق الواجهة الآن...</p>
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
