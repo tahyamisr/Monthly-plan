@@ -381,7 +381,13 @@ export function PlanForm() {
         <footer className="mt-10 pt-6 border-t">
              {!showSignatures ? (
                 <div className="text-center">
-                    <Button type="button" onClick={handleShowSignatures} variant="secondary" className="font-bold">
+                    <Button
+                        type="button"
+                        onClick={handleShowSignatures}
+                        variant="secondary"
+                        className="font-bold"
+                        disabled={eventFields.length === 0}
+                    >
                         إضافة التوقيعات
                     </Button>
                 </div>
