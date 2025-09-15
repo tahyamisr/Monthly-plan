@@ -38,8 +38,8 @@ const arabicQuadName = z.string()
   .refine(value => /^[\u0621-\u064A\s]+$/.test(value), {
     message: "الرجاء إدخال الاسم باللغة العربية فقط.",
   })
-  .refine(value => value.trim().split(/\s+/).length === 4, {
-    message: "الرجاء إدخال الاسم الرباعي.",
+  .refine(value => value.trim().split(/\s+/).length >= 4, {
+    message: "الرجاء إدخال الاسم رباعي على الأقل.",
   });
 
 const formSchema = z.object({
