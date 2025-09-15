@@ -248,7 +248,7 @@ export function PlanForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <h3 className="text-3xl font-bold text-center text-primary my-6">خطة الشهر المركزية</h3>
+        <h3 className="text-3xl font-bold text-center text-primary my-6">تقرير الشهر المركزي</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg mb-8 p-4 bg-muted/50 rounded-md">
             <FormField
@@ -293,7 +293,7 @@ export function PlanForm() {
         </div>
         
         <div className="text-foreground text-sm leading-relaxed mb-6 text-center space-y-2 bg-muted/50 p-3 rounded-md">
-            <p>خطة شهر <span className="font-bold text-primary">{selectedMonth || "................"}</span></p>
+            <p>تقرير شهر <span className="font-bold text-primary">{selectedMonth || "................"}</span></p>
             <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{govDisplay}</span>.</p>
             <p className="font-semibold">إلى السادة:</p>
             <ul className="list-none p-0 m-0 text-xs text-muted-foreground">
