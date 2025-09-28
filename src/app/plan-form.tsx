@@ -78,7 +78,6 @@ const years = Array.from({ length: 10 }, (_, i) => (currentYear + i).toString())
 export function PlanForm() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const [govDisplay, setGovDisplay] = React.useState("...............");
   const [showEventForm, setShowEventForm] = React.useState(false);
   const [showSignatures, setShowSignatures] = React.useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
@@ -116,6 +115,7 @@ export function PlanForm() {
     },
   });
   
+  const selectedGovernorate = form.watch("governorate");
   const selectedMonth = form.watch("month");
   const selectedYear = form.watch("year");
 
@@ -271,10 +271,7 @@ export function PlanForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-bold">المحافظة:</FormLabel>
-                  <Select onValueChange={(value) => {
-                      field.onChange(value);
-                      setGovDisplay(value || "...............");
-                  }} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
                     </FormControl>
@@ -326,12 +323,12 @@ export function PlanForm() {
         
         <div className="text-foreground text-sm leading-relaxed mb-6 text-center space-y-2 bg-muted/50 p-3 rounded-md">
             <p>خطة شهر <span className="font-bold text-primary">{selectedMonth || "................"}</span> لعام <span className="font-bold text-primary">{selectedYear || "...."}</span></p>
-            <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{govDisplay}</span>.</p>
+            <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{selectedGovernorate || "..............."}</span>.</p>
             <p className="font-semibold">إلى السادة:</p>
             <ul className="list-none p-0 m-0 text-xs text-muted-foreground">
-                <li>القائد/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)</li>
-                <li>القائد/ <strong className="text-foreground">ريم منصور</strong> (نائب رئيس اللجنة)</li>
-                <li>القائد/ <strong className="text-foreground">أحمد حسن</strong> (نائب رئيس اللجنة)</li>
+                <li>المهندس/ <strong className="text-foreground">إسلام فارس</strong> (رئيس لجنة التنظيم المركزية)</li>
+                <li>الأستاذة/ <strong className="text-foreground">ريم منصور</strong> (نائب رئيس اللجنة)</li>
+                <li>الأستاذ/ <strong className="text-foreground">أحمد حسن</strong> (نائب رئيس اللجنة)</li>
             </ul>
         </div>
 
