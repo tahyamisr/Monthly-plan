@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
-import { Loader2, Trash2, Pencil, CheckCircle2 } from "lucide-react";
+import { Loader2, Trash2, Pencil, CheckCircle2, X } from "lucide-react";
 
 declare global {
   interface Window {
@@ -73,7 +73,7 @@ const governorates = [
 const eventTypes = ["اونلاين", "اوفلاين"];
 
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 10 }, (_, i) => (currentYear - 1 + i).toString());
+const years = Array.from({ length: 10 }, (_, i) => (currentYear + i).toString());
 
 export function PlanForm() {
   const [isPending, startTransition] = useTransition();
@@ -149,6 +149,13 @@ export function PlanForm() {
     }
 
     // Reset form and state
+    setNewEvent(initialNewEventState);
+    setNewDate(initialNewDateState);
+    setShowEventForm(false);
+    setEditingEventIndex(null);
+  };
+  
+  const handleCancelEvent = () => {
     setNewEvent(initialNewEventState);
     setNewDate(initialNewDateState);
     setShowEventForm(false);
@@ -236,7 +243,7 @@ export function PlanForm() {
         </Select>
          <Select onValueChange={(year) => onChange({...value, year})} value={value.year}>
           <SelectTrigger><SelectValue placeholder="السنة" /></SelectTrigger>
-          <SelectContent>{Array.from({ length: 6 }, (_, i) => <SelectItem key={i} value={`${new Date().getFullYear() + i}`}>{new Date().getFullYear() + i}</SelectItem>)}</SelectContent>
+          <SelectContent>{Array.from({ length: 10 }, (_, i) => <SelectItem key={i} value={`${new Date().getFullYear() + i}`}>{new Date().getFullYear() + i}</SelectItem>)}</SelectContent>
         </Select>
       </div>
     );
@@ -391,7 +398,13 @@ export function PlanForm() {
                         <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                       </Select>
                     </FormItem>
-                    <Button type="button" onClick={handleSaveEvent}>حفظ الفعالية</Button>
+                    <div className="flex gap-2">
+                        <Button type="button" onClick={handleSaveEvent}>حفظ الفعالية</Button>
+                        <Button type="button" variant="ghost" onClick={handleCancelEvent}>
+                            <X className="h-5 w-5 mr-1" />
+                            إلغاء
+                        </Button>
+                    </div>
                 </div>
             )}
              <div className="mt-4 text-center">
@@ -484,5 +497,3 @@ export function PlanForm() {
     </Form>
   );
 }
-
-    
