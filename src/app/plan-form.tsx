@@ -394,24 +394,26 @@ export function PlanForm() {
                           />
                       </FormControl>
                     </FormItem>
-                     <FormItem className="flex flex-row items-center space-x-3 space-y-0" dir="ltr">
-                      <FormControl>
-                        <Checkbox
-                          checked={isDateTbd}
-                          onCheckedChange={(checked) => setIsDateTbd(Boolean(checked))}
-                          id="date-tbd"
-                        />
-                      </FormControl>
-                      <FormLabel htmlFor="date-tbd" className="font-normal cursor-pointer">
-                        لم يحدد تاريخ بعد
-                      </FormLabel>
-                    </FormItem>
+                    
                     <FormItem>
-                      <FormLabel>متى سيقام الحدث؟</FormLabel>
+                       <div className="flex justify-between items-center mb-2">
+                        <FormLabel>متى سيقام الحدث؟</FormLabel>
+                        <div className="flex items-center gap-2" dir="ltr">
+                           <Checkbox
+                            checked={isDateTbd}
+                            onCheckedChange={(checked) => setIsDateTbd(Boolean(checked))}
+                            id="date-tbd"
+                          />
+                          <label htmlFor="date-tbd" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                            لم يحدد تاريخ بعد
+                          </label>
+                        </div>
+                      </div>
                        <FormControl>
                           <DateSelector value={newDate} onChange={setNewDate} disabled={isDateTbd} />
                       </FormControl>
                     </FormItem>
+
                     <FormItem>
                       <FormLabel>ما هو نوع الحدث؟</FormLabel>
                       <Select 
@@ -520,5 +522,3 @@ export function PlanForm() {
     </Form>
   );
 }
-
-    
