@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
 import { Loader2, Trash2, Pencil, CheckCircle2, X } from "lucide-react";
@@ -38,7 +39,7 @@ const arabicQuadName = z.string()
   .refine(value => /^[\u0621-\u064A\s]+$/.test(value), {
     message: "الرجاء إدخال الاسم باللغة العربية فقط.",
   })
-  .refine(value => value.trim().split(/\s+/).length >= 4, {
+  .refine(value => value.trim().split(/\s+/).filter(Boolean).length >= 4, {
     message: "الرجاء إدخال الاسم رباعي على الأقل.",
   });
 
@@ -90,6 +91,7 @@ export function PlanForm() {
   // State for the new/editing event being created
   const [newEvent, setNewEvent] = React.useState(initialNewEventState);
   const [newDate, setNewDate] = React.useState(initialNewDateState);
+  const [isDateTbd, setIsDateTbd] = React.useState(false);
 
   const [telegramUser, setTelegramUser] = useState<any>(null);
 
@@ -130,7 +132,7 @@ export function PlanForm() {
   });
 
   const handleSaveEvent = () => {
-    const fullDate = newDate.day && newDate.month && newDate.year ? `${newDate.day}/${newDate.month}/${newDate.year}` : "";
+    const fullDate = isDateTbd ? "لم يحدد بعد" : (newDate.day && newDate.month && newDate.year ? `${newDate.day}/${newDate.month}/${newDate.year}` : "");
     const eventToSave = { ...newEvent, date: fullDate };
 
     if (!eventToSave.details || !eventToSave.date || !eventToSave.type) {
@@ -153,6 +155,7 @@ export function PlanForm() {
     setNewDate(initialNewDateState);
     setShowEventForm(false);
     setEditingEventIndex(null);
+    setIsDateTbd(false);
   };
   
   const handleCancelEvent = () => {
@@ -160,6 +163,7 @@ export function PlanForm() {
     setNewDate(initialNewDateState);
     setShowEventForm(false);
     setEditingEventIndex(null);
+    setIsDateTbd(false);
   };
   
   const handleAddNewEventClick = () => {
@@ -173,12 +177,23 @@ export function PlanForm() {
       month: monthNumber,
       year: selectedYear,
     });
+    setIsDateTbd(false);
     setShowEventForm(true);
   };
 
   const handleEditEventClick = (index: number) => {
     const eventToEdit = eventFields[index];
-    const [day, month, year] = eventToEdit.date.split('/');
+    
+    if (eventToEdit.date === "لم يحدد بعد") {
+        setIsDateTbd(true);
+        const monthIndex = months.indexOf(selectedMonth);
+        const monthNumber = monthIndex !== -1 ? (monthIndex + 1).toString() : "";
+        setNewDate({ day: "", month: monthNumber, year: selectedYear });
+    } else {
+        const [day, month, year] = eventToEdit.date.split('/');
+        setIsDateTbd(false);
+        setNewDate({ day, month, year });
+    }
 
     setEditingEventIndex(index);
     setNewEvent({
@@ -186,7 +201,6 @@ export function PlanForm() {
       date: eventToEdit.date,
       type: eventToEdit.type,
     });
-    setNewDate({ day, month, year });
     setShowEventForm(true);
   };
 
@@ -230,18 +244,18 @@ export function PlanForm() {
     });
   }
   
-  const DateSelector = ({ value, onChange }: { value: {day: string, month: string, year: string}, onChange: (date: {day: string, month: string, year: string}) => void }) => {
+  const DateSelector = ({ value, onChange, disabled }: { value: {day: string, month: string, year: string}, onChange: (date: {day: string, month: string, year: string}) => void, disabled?: boolean }) => {
     return (
       <div className="flex gap-2 justify-center">
-        <Select onValueChange={(day) => onChange({...value, day})} value={value.day}>
+        <Select onValueChange={(day) => onChange({...value, day})} value={value.day} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder="اليوم" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 31 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
-        <Select onValueChange={(month) => onChange({...value, month})} value={value.month}>
+        <Select onValueChange={(month) => onChange({...value, month})} value={value.month} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder="الشهر" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 12 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
-         <Select onValueChange={(year) => onChange({...value, year})} value={value.year}>
+         <Select onValueChange={(year) => onChange({...value, year})} value={value.year} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder="السنة" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 10 }, (_, i) => <SelectItem key={i} value={`${new Date().getFullYear() + i}`}>{new Date().getFullYear() + i}</SelectItem>)}</SelectContent>
         </Select>
@@ -380,10 +394,22 @@ export function PlanForm() {
                           />
                       </FormControl>
                     </FormItem>
+                     <FormItem className="flex flex-row items-center space-x-3 space-y-0" dir="ltr">
+                      <FormControl>
+                        <Checkbox
+                          checked={isDateTbd}
+                          onCheckedChange={(checked) => setIsDateTbd(Boolean(checked))}
+                          id="date-tbd"
+                        />
+                      </FormControl>
+                      <FormLabel htmlFor="date-tbd" className="font-normal cursor-pointer">
+                        لم يحدد تاريخ بعد
+                      </FormLabel>
+                    </FormItem>
                     <FormItem>
                       <FormLabel>متى سيقام الحدث؟</FormLabel>
                        <FormControl>
-                          <DateSelector value={newDate} onChange={setNewDate} />
+                          <DateSelector value={newDate} onChange={setNewDate} disabled={isDateTbd} />
                       </FormControl>
                     </FormItem>
                     <FormItem>
@@ -494,3 +520,5 @@ export function PlanForm() {
     </Form>
   );
 }
+
+    
