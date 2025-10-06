@@ -396,22 +396,23 @@ export function PlanForm() {
                     </FormItem>
                     
                     <FormItem>
-                       <div className="flex justify-between items-center mb-2">
                         <FormLabel>متى سيقام الحدث؟</FormLabel>
-                        <div className="flex items-center gap-2" dir="ltr">
-                           <label htmlFor="date-tbd" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                            لم يحدد تاريخ بعد
-                          </label>
+                       <FormControl>
+                          <DateSelector value={newDate} onChange={setNewDate} disabled={isDateTbd} />
+                      </FormControl>
+                      <div className="flex items-center space-x-2 space-x-reverse pt-2">
                            <Checkbox
                             checked={isDateTbd}
                             onCheckedChange={(checked) => setIsDateTbd(Boolean(checked))}
                             id="date-tbd"
                           />
+                           <label
+                            htmlFor="date-tbd"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            لم يحدد تاريخ بعد
+                          </label>
                         </div>
-                      </div>
-                       <FormControl>
-                          <DateSelector value={newDate} onChange={setNewDate} disabled={isDateTbd} />
-                      </FormControl>
                     </FormItem>
 
                     <FormItem>
