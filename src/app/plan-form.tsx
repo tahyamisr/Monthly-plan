@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { submitPlan } from "./actions";
 import { Loader2, Trash2, Pencil, CheckCircle2, PlusCircle, Trash } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 declare global {
@@ -53,13 +54,12 @@ const formSchema = z.object({
   events: z
     .array(
       z.object({
-        details: z.string().min(1, "تفاصيل الحدث مطلوبة."),
+        details: z.string().min(1, "تفاصيل الخطة مطلوبة."),
         date: z.string().min(1, "التاريخ مطلوب."),
-        type: z.string().min(1, "نوع الحدث مطلوب."),
-        result: z.string().min(1, "نتيجة الحدث مطلوبة."),
+        type: z.string().min(1, "نوع الخطة مطلوب."),
       })
     )
-    .min(1, "يجب إضافة فعالية واحدة على الأقل."),
+    .min(1, "يجب إضافة خطة واحدة على الأقل."),
   deputies: z.array(z.object({ name: arabicQuadName })).min(1, "يجب إضافة نائب واحد على الأقل."),
   president: arabicQuadName,
 });
@@ -78,7 +78,6 @@ const governorates = [
 ];
 
 const eventTypes = ["اونلاين", "اوفلاين"];
-const eventResults = ["تم", "لم يتم"];
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 7 }, (_, i) => (currentYear - 1 + i).toString());
@@ -109,11 +108,12 @@ export function PlanForm() {
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [editingEventIndex, setEditingEventIndex] = useState<number | null>(null);
 
-  const initialNewEventState = { details: "", date: "", type: "", result: "" };
+  const initialNewEventState = { details: "", date: "", type: "" };
   const initialNewDateState = { day: "", month: "", year: new Date().getFullYear().toString() };
   
   const [newEvent, setNewEvent] = useState(initialNewEventState);
   const [newDate, setNewDate] = useState(initialNewDateState);
+  const [dateNotSet, setDateNotSet] = useState(false);
 
   const [telegramUser, setTelegramUser] = useState<any>(null);
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
@@ -230,18 +230,19 @@ export function PlanForm() {
   const resetAndCloseEventForm = () => {
     setNewEvent(initialNewEventState);
     setNewDate(initialNewDateState);
+    setDateNotSet(false);
     setShowEventForm(false);
     setEditingEventIndex(null);
   };
 
   const handleSaveEvent = () => {
-    const fullDate = newDate.day && newDate.month && newDate.year ? `${newDate.day}/${newDate.month}/${newDate.year}` : "";
+    const fullDate = dateNotSet ? "لم يحدد بعد" : (newDate.day && newDate.month && newDate.year ? `${newDate.day}/${newDate.month}/${newDate.year}` : "");
     const eventToSave = { ...newEvent, date: fullDate };
 
-    if (!eventToSave.details || !eventToSave.date || !eventToSave.type || !eventToSave.result) {
+    if (!eventToSave.details || !eventToSave.date || !eventToSave.type) {
         toast({
             title: "بيانات غير مكتملة",
-            description: "الرجاء ملء جميع حقول الفعالية قبل الحفظ.",
+            description: "الرجاء ملء جميع حقول الخطة قبل الحفظ.",
             variant: "destructive",
         });
         return;
@@ -272,6 +273,7 @@ export function PlanForm() {
     
     setEditingEventIndex(null);
     setNewEvent(initialNewEventState);
+    setDateNotSet(false);
     setNewDate({
       day: "",
       month: monthNumber,
@@ -282,16 +284,22 @@ export function PlanForm() {
 
   const handleEditEventClick = (index: number) => {
     const eventToEdit = eventFields[index];
-    const [day, month, year] = eventToEdit.date.split('/');
+    
+    if (eventToEdit.date === "لم يحدد بعد") {
+      setDateNotSet(true);
+      setNewDate(initialNewDateState);
+    } else {
+      const [day, month, year] = eventToEdit.date.split('/');
+      setDateNotSet(false);
+      setNewDate({ day, month, year });
+    }
 
     setEditingEventIndex(index);
     setNewEvent({
       details: eventToEdit.details,
       date: eventToEdit.date,
       type: eventToEdit.type,
-      result: eventToEdit.result,
     });
-    setNewDate({ day, month, year });
     setShowEventForm(true);
   };
 
@@ -335,7 +343,7 @@ export function PlanForm() {
         year: values.year,
         presidentSign: values.president,
         deputySigns: values.deputies.map(d => d.name).filter(Boolean),
-        events: values.events.map(e => ({ name: e.details, date: e.date, type: e.type, result: e.result })),
+        events: values.events.map(e => ({ name: e.details, date: e.date, type: e.type, result: "تم" })),
         telegramUser: telegramUser ? {
           id: telegramUser.id,
           firstName: telegramUser.first_name,
@@ -390,18 +398,18 @@ export function PlanForm() {
     }
   };
   
-  const DateSelector = ({ value, onChange }: { value: {day: string, month: string, year: string}, onChange: (date: {day: string, month: string, year: string}) => void }) => {
+  const DateSelector = ({ value, onChange, disabled }: { value: {day: string, month: string, year: string}, onChange: (date: {day: string, month: string, year: string}) => void, disabled: boolean }) => {
     return (
       <div className="flex gap-2 justify-center">
-        <Select onValueChange={(day) => onChange({...value, day})} value={value.day}>
+        <Select onValueChange={(day) => onChange({...value, day})} value={value.day} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder="اليوم" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 31 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
-        <Select onValueChange={(month) => onChange({...value, month})} value={value.month}>
+        <Select onValueChange={(month) => onChange({...value, month})} value={value.month} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder="الشهر" /></SelectTrigger>
           <SelectContent>{Array.from({ length: 12 }, (_, i) => <SelectItem key={i+1} value={`${i+1}`}>{i+1}</SelectItem>)}</SelectContent>
         </Select>
-         <Select onValueChange={(year) => onChange({...value, year})} value={value.year}>
+         <Select onValueChange={(year) => onChange({...value, year})} value={value.year} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder="السنة" /></SelectTrigger>
           <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
         </Select>
@@ -555,14 +563,14 @@ export function PlanForm() {
                   <AlertDialogTrigger asChild>
                        <Button type="button" variant="destructive" size="sm">
                           <Trash2 className="ml-2 h-4 w-4" />
-                          حذف كل الفعاليات
+                          حذف كل الخطط
                       </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                       <AlertDialogHeader>
                       <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                       <AlertDialogDescription>
-                          سيتم حذف جميع الفعاليات المسجلة. لا يمكن التراجع عن هذا الإجراء.
+                          سيتم حذف جميع الخطط المسجلة. لا يمكن التراجع عن هذا الإجراء.
                       </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -576,12 +584,11 @@ export function PlanForm() {
             {eventFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
                  <div className="mb-2">
-                    <p className="font-bold">الفعالية #{index + 1}:</p>
+                    <p className="font-bold">الخطة #{index + 1}:</p>
                     <p className="whitespace-pre-wrap">{field.details}</p>
                 </div>
                 <p><strong>التاريخ:</strong> {field.date}</p>
                 <p><strong>النوع:</strong> {field.type}</p>
-                <p><strong>النتيجة:</strong> {field.result}</p>
                  <div className="absolute top-2 left-2 flex gap-2">
                     <Button
                       type="button"
@@ -613,7 +620,7 @@ export function PlanForm() {
                       <FormLabel>ما هو الحدث؟</FormLabel>
                       <FormControl>
                           <Textarea 
-                              placeholder="تفاصيل الحدث" 
+                              placeholder="تفاصيل الخطة" 
                               value={newEvent.details}
                               onChange={(e) => setNewEvent({...newEvent, details: e.target.value})}
                               className="h-24"
@@ -621,10 +628,23 @@ export function PlanForm() {
                       </FormControl>
                     </FormItem>
                     <FormItem>
-                      <FormLabel>تاريخ إنعقاد الحدث؟</FormLabel>
+                      <FormLabel>متى سيقام الحدث؟</FormLabel>
                        <FormControl>
-                          <DateSelector value={newDate} onChange={setNewDate} />
+                          <DateSelector value={newDate} onChange={setNewDate} disabled={dateNotSet} />
                       </FormControl>
+                       <div className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id="date-not-set"
+                          checked={dateNotSet}
+                          onCheckedChange={(checked) => setDateNotSet(!!checked)}
+                        />
+                        <label
+                          htmlFor="date-not-set"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          لم يحدد تاريخ بعد
+                        </label>
+                      </div>
                     </FormItem>
                     <FormItem>
                       <FormLabel>ما هو نوع الحدث؟</FormLabel>
@@ -635,17 +655,8 @@ export function PlanForm() {
                         <SelectContent>{eventTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                       </Select>
                     </FormItem>
-                    <FormItem>
-                      <FormLabel>نتيجة الحدث</FormLabel>
-                      <Select 
-                          onValueChange={(value) => setNewEvent({...newEvent, result: value})} 
-                          value={newEvent.result}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="اختر النتيجة" /></SelectTrigger></FormControl>
-                        <SelectContent>{eventResults.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </FormItem>
                     <div className="flex gap-2 justify-start">
-                      <Button type="button" onClick={handleSaveEvent}>حفظ الفعالية</Button>
+                      <Button type="button" onClick={handleSaveEvent}>حفظ الخطة</Button>
                       <Button type="button" variant="destructive" onClick={resetAndCloseEventForm}>
                         الغاء
                       </Button>

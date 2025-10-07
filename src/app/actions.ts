@@ -67,7 +67,7 @@ export async function submitPlan(
     }
 
     return {
-      message: 'Plan submitted successfully!',
+      message: 'الخطة أُرسلت بنجاح!',
       success: true,
     };
   } catch (error) {
