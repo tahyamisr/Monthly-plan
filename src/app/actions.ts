@@ -49,7 +49,7 @@ export async function submitPlan(
   }
 
   try {
-    const response = await fetch('https://submit.tahyamisrsu.com/webhook/Report-tahyamisr', {
+    const response = await fetch('https://submit.tahyamisrsu.com/webhook/plan-oc', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

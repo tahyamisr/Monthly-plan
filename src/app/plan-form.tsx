@@ -582,7 +582,7 @@ export function PlanForm() {
             )}
           </div>
             {eventFields.map((field, index) => (
-              <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative">
+              <div key={field.id} className="p-4 border rounded-md bg-muted/50 relative transition-shadow hover:shadow-md fade-in-up">
                  <div className="mb-2">
                     <p className="font-bold">الخطة #{index + 1}:</p>
                     <p className="whitespace-pre-wrap">{field.details}</p>
@@ -614,7 +614,7 @@ export function PlanForm() {
              <FormMessage>{form.formState.errors.events?.root?.message || form.formState.errors.events?.message}</FormMessage>
 
             {showEventForm && (
-                <div className="p-4 border rounded-md mt-4 space-y-4">
+                <div className="p-4 border rounded-md mt-4 space-y-4 fade-in-up">
                     <h4 className="font-bold text-lg">{editingEventIndex !== null ? 'تعديل الخطة' : 'إضافة خطة جديدة'}</h4>
                     <FormItem>
                       <FormLabel>ما هو الحدث؟</FormLabel>
@@ -686,7 +686,7 @@ export function PlanForm() {
                     </Button>
                 </div>
             ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 fade-in-up">
                 <div className="text-center">
                     <p className="font-bold text-lg">نائب رئيس اللجنة</p>
                     <div className="space-y-2 mt-4 mx-auto max-w-xs">
