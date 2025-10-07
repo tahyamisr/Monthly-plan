@@ -149,7 +149,7 @@ export function PlanForm() {
     const newId = uuidv4();
     const newReport: SavedReport = {
         id: newId,
-        name: "تقرير جديد",
+        name: "خطة جديدة",
         data: getInitialFormValues(),
         createdAt: new Date().toISOString()
     };
@@ -195,7 +195,7 @@ export function PlanForm() {
         setSavedReports(prevReports => {
             const updatedReports = prevReports.map(report => {
                 if (report.id === activeReportId) {
-                    const newName = `تقرير ${values.month || ''} ${values.year || ''} - ${values.governorate || ''}`.trim();
+                    const newName = `خطة ${values.month || ''} ${values.year || ''} - ${values.governorate || ''}`.trim();
                     return { ...report, data: values as FormValues, name: newName };
                 }
                 return report;
@@ -261,7 +261,7 @@ export function PlanForm() {
     if (!canAddEvents) {
         toast({
             title: "بيانات أساسية مطلوبة",
-            description: "الرجاء اختيار المحافظة، الشهر، والسنة أولاً لتتمكن من إضافة التقارير.",
+            description: "الرجاء اختيار المحافظة، الشهر، والسنة أولاً لتتمكن من إضافة الخطط.",
             variant: "destructive",
         });
         return;
@@ -369,7 +369,7 @@ export function PlanForm() {
       governorate: "المحافظة",
       month: "الشهر",
       year: "السنة",
-      events: "التقارير",
+      events: "الخطط",
       president: "توقيع رئيس اللجنة",
       deputies: "توقيعات النواب"
     };
@@ -430,14 +430,14 @@ export function PlanForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
-        <h3 className="text-3xl font-bold text-center text-primary my-6">تقرير الشهر المركزي</h3>
+        <h3 className="text-3xl font-bold text-center text-primary my-6">خطة الشهر المركزي</h3>
         
         <div className="p-4 border rounded-md bg-card space-y-4 hidden">
-             <h4 className="font-bold text-lg text-center">إدارة التقارير</h4>
+             <h4 className="font-bold text-lg text-center">إدارة الخطط</h4>
              <div className="flex flex-col sm:flex-row gap-2 items-center">
                  <Select onValueChange={handleLoadReport} value={activeReportId ?? ""}>
                     <SelectTrigger className="flex-grow">
-                        <SelectValue placeholder="اختر تقرير محفوظ..." />
+                        <SelectValue placeholder="اختر خطة محفوظة..." />
                     </SelectTrigger>
                     <SelectContent>
                         {sortedReports.map(report => (
@@ -450,7 +450,7 @@ export function PlanForm() {
                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button type="button" onClick={handleNewReport} className="flex-grow sm:flex-grow-0">
                         <PlusCircle className="ml-2 h-4 w-4" />
-                        تقرير جديد
+                        خطة جديدة
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -462,7 +462,7 @@ export function PlanForm() {
                             <AlertDialogHeader>
                             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                             <AlertDialogDescription>
-                                سيتم حذف هذا التقرير نهائياً. لا يمكن التراجع عن هذا الإجراء.
+                                سيتم حذف هذه الخطة نهائياً. لا يمكن التراجع عن هذا الإجراء.
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -536,7 +536,7 @@ export function PlanForm() {
         </div>
         
         <div className="text-foreground text-sm leading-relaxed mb-6 text-center space-y-2 bg-muted/50 p-3 rounded-md">
-            <p>تقرير شهر <span className="font-bold text-primary">{selectedMonth || "................"}</span> لعام <span className="font-bold text-primary">{selectedYear || "...."}</span></p>
+            <p>خطة شهر <span className="font-bold text-primary">{selectedMonth || "................"}</span> لعام <span className="font-bold text-primary">{selectedYear || "...."}</span></p>
             <p>مقدم من لجنة التنظيم بمحافظة <span className="font-bold text-primary">{form.getValues("governorate") || "..............."}</span>.</p>
             <p className="font-semibold">إلى السادة:</p>
             <ul className="list-none p-0 m-0 text-xs text-muted-foreground">
@@ -549,7 +549,7 @@ export function PlanForm() {
         {/* Events Section */}
         <div className="space-y-4">
           <div className={cn("flex items-center", eventFields.length > 0 ? "justify-between" : "justify-center")}>
-            <h3 className="text-xl text-foreground font-bold">التقارير</h3>
+            <h3 className="text-xl text-foreground font-bold">الخطط</h3>
             {eventFields.length > 0 && (
               <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -608,7 +608,7 @@ export function PlanForm() {
 
             {showEventForm && (
                 <div className="p-4 border rounded-md mt-4 space-y-4">
-                    <h4 className="font-bold text-lg">{editingEventIndex !== null ? 'تعديل التقرير' : 'إضافة تقرير جديد'}</h4>
+                    <h4 className="font-bold text-lg">{editingEventIndex !== null ? 'تعديل الخطة' : 'إضافة خطة جديدة'}</h4>
                     <FormItem>
                       <FormLabel>ما هو الحدث؟</FormLabel>
                       <FormControl>
@@ -654,7 +654,7 @@ export function PlanForm() {
             )}
              <div className="mt-4 text-center">
                 <Button type="button" onClick={handleAddNewEventClick} variant="secondary" disabled={showEventForm} className="font-bold">
-                  اضافة تقرير
+                  اضافة خطة
                 </Button>
             </div>
         </div>
@@ -734,7 +734,7 @@ export function PlanForm() {
                 <span>جاري التحميل...</span>
               </>
             ) : (
-              "تنزيل التقرير pdf"
+              "تنزيل الخطة pdf"
             )}
           </Button>
         </div>
